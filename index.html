@@ -39,7 +39,8 @@
   --under: #0b7a3e;
   --over: #b23c1c;
   --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-  --font-num: "IBM Plex Mono", ui-monospace, "Consolas", monospace;
+  --font-num: var(--font-body);
+  --font-code: "IBM Plex Mono", ui-monospace, "Consolas", monospace;
   --r: 14px;
   --nav-h: 64px;
   color-scheme: light;
@@ -47,26 +48,27 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55;
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.6; letter-spacing: -0.01em;
+  word-break: keep-all; overflow-wrap: anywhere; font-variant-numeric: tabular-nums;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 12px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom, 0px));
   -webkit-tap-highlight-color: transparent;
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
-h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.3; letter-spacing: -0.02em; }
 h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; word-break: keep-all; }
 h2 { font-size: 1.15rem; font-weight: 700; }
 p { margin: 0; }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
-.help { color: var(--muted); font-size: 0.95rem; }
+.help { color: var(--muted); font-size: 0.95rem; line-height: 1.65; text-wrap: pretty; }
 
 input, select, button, textarea { font: inherit; color: inherit; }
 input[type="text"], input[type="date"], input[type="number"], select, textarea {
   background: var(--card); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 46px; min-width: 0;
 }
-textarea { width: 100%; min-height: 120px; font-family: var(--font-num); font-size: 0.9rem; }
+textarea { width: 100%; min-height: 120px; font-family: var(--font-code); letter-spacing: 0; font-size: 0.9rem; }
 :focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
 button {
   cursor: pointer; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card);
@@ -92,12 +94,12 @@ header.top { display: grid; gap: 10px; }
 #roomPill .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: currentColor; }
 #roomPill.warn { background: var(--mark); color: var(--mark-ink); border-color: var(--mark); }
 .room-card, .install-card { border-color: var(--green); }
-.steps { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+.steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; line-height: 1.5; }
 a.btn-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 18px; border-radius: 12px; font-weight: 700; text-decoration: none; }
 a.btn-link.primary { background: var(--green); color: var(--on-green); }
-.invite-link { font-family: var(--font-num); font-size: 0.9rem; word-break: break-all; background: var(--green-soft); border-radius: 10px; padding: 10px 12px; user-select: all; }
-.room-code { font-family: var(--font-num); font-size: 1.6rem; font-weight: 700; letter-spacing: 0.08em; }
-.lock-note { font-size: 0.95rem; color: var(--muted); background: var(--green-soft); border-radius: 10px; padding: 10px 12px; }
+.invite-link { font-family: var(--font-code); letter-spacing: 0; font-size: 0.9rem; word-break: break-all; background: var(--green-soft); border-radius: 10px; padding: 10px 12px; user-select: all; }
+.room-code { font-family: var(--font-code); font-size: 1.6rem; font-weight: 700; letter-spacing: 0.08em; }
+.lock-note { line-height: 1.6; font-size: 0.95rem; color: var(--muted); background: var(--green-soft); border-radius: 10px; padding: 10px 12px; }
 
 /* 하단 탭바 */
 nav.tabs {
@@ -116,7 +118,7 @@ nav.tabs a[aria-current="page"] { color: var(--green); background: var(--green-s
   background: var(--mark); color: var(--mark-ink); border-radius: var(--r); padding: 12px 14px; font-weight: 500; }
 
 section.panel { display: grid; gap: 14px; }
-.card { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
+.card { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r); padding: 18px 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
 #holeView, #tableView, #totalView { min-width: 0; }
 .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
 .step { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--green); color: var(--on-green); font-family: var(--font-num); font-size: 0.9rem; margin-right: 8px; vertical-align: 2px; }
@@ -142,7 +144,7 @@ details.rules > summary::after { content: "펼치기"; font-size: 0.85rem; color
 details.rules[open] > summary::after { content: "접기"; }
 .settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 20px; margin-top: 14px; }
 .settings label.field { display: grid; gap: 6px; font-weight: 500; }
-.formula { font-family: var(--font-num); background: var(--green-soft); color: var(--ink); border-radius: 10px; padding: 12px 14px; font-size: 0.92rem; line-height: 1.7; overflow-x: auto; }
+.formula { font-family: var(--font-body); background: var(--green-soft); color: var(--ink); border-radius: 10px; padding: 12px 14px; font-size: 0.92rem; line-height: 1.7; overflow-x: auto; }
 
 /* 선수 명단 */
 .roster { display: grid; gap: 8px; }
@@ -156,7 +158,7 @@ details.rules[open] > summary::after { content: "접기"; }
 .settings select { min-height: 46px; }
 .lock { display: grid; gap: 12px; justify-items: center; text-align: center; padding: 28px 16px; }
 .lock b { font-size: 1.15rem; text-wrap: balance; word-break: keep-all; }
-.checkline { font-size: 0.95rem; background: var(--green-soft); border-radius: 10px; padding: 10px 12px; line-height: 1.7; }
+.checkline { font-size: 0.93rem; background: var(--green-soft); border-radius: 10px; padding: 12px 14px; line-height: 1.65; }
 .rank-card .why { font-size: 0.8rem; color: var(--flag); font-weight: 700; }
 .total-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px 84px; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .total-row:first-child { border-top: 0; }
@@ -169,10 +171,10 @@ details.rules[open] > summary::after { content: "접기"; }
 .roster-item.wide { grid-template-columns: 28px minmax(0, 1fr) auto; }
 .roster-item.wide .extra { grid-column: 2 / 3; }
 .awards { display: grid; gap: 6px; }
-.award { display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); align-items: baseline; }
+.award { display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 10px; padding: 10px 0; line-height: 1.45; border-top: 1px solid var(--line); align-items: baseline; }
 .award:first-child { border-top: 0; }
 .award .t { font-weight: 700; color: var(--green); }
-.award .d { font-family: var(--font-num); font-size: 0.85rem; color: var(--muted); }
+.award .d { font-size: 0.88rem; color: var(--muted); }
 .manual-row { display: grid; grid-template-columns: 7.5em 5.5em minmax(0, 1fr) auto; gap: 6px; }
 .manual-row select, .manual-row input { min-width: 0; }
 @media (max-width: 520px) { .manual-row { grid-template-columns: 1fr 1fr; } .award { grid-template-columns: 1fr; gap: 2px; } }
@@ -201,10 +203,10 @@ details.detail > summary { cursor: pointer; font-size: 0.9rem; color: var(--gree
 .hole-head .par { font-size: 1.2rem; font-weight: 700; }
 .badge { display: inline-block; font-size: 0.8rem; font-weight: 700; padding: 2px 10px; border-radius: 99px; background: var(--mark); color: var(--mark-ink); }
 .players { display: grid; gap: 0; }
-.p-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.p-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
 .p-row:first-child { border-top: 0; }
-.p-name { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
-.p-sum { font-size: 0.85rem; color: var(--muted); font-family: var(--font-num); }
+.p-name { font-weight: 700; font-size: 1.05rem; line-height: 1.35; overflow-wrap: anywhere; }
+.p-sum { font-size: 0.88rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
 .stepper { display: grid; grid-template-columns: 54px 76px 54px; align-items: center; gap: 6px; }
 .stepper button { min-height: 54px; font-size: 1.6rem; line-height: 1; padding: 0; border-radius: 14px; }
 .stepper .val { display: grid; justify-items: center; gap: 0; cursor: pointer; border-radius: 12px; padding: 4px 0; }
@@ -241,7 +243,7 @@ details.paste > summary { cursor: pointer; font-weight: 700; }
 
 /* 결과 */
 .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-.summary .slot { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 2px; }
+.summary .slot { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 4px; line-height: 1.35; }
 .summary .slot.win { background: var(--green); border-color: var(--green); color: var(--on-green); }
 .summary .label { font-size: 0.85rem; font-weight: 700; opacity: 0.85; }
 .summary .who { font-size: 1.3rem; font-weight: 700; }
@@ -252,7 +254,8 @@ details.paste > summary { cursor: pointer; font-weight: 700; }
 .rank-card.top { border-color: var(--green); }
 .rank-card .rk { font-family: var(--font-num); font-size: 1.6rem; font-weight: 700; text-align: center; }
 .rank-card.top .rk { color: var(--green); }
-.rank-card .nm { font-weight: 700; font-size: 1.1rem; overflow-wrap: anywhere; }
+.rank-card .nm { font-weight: 700; font-size: 1.1rem; line-height: 1.35; overflow-wrap: anywhere; }
+.rank-card > div { display: grid; gap: 2px; min-width: 0; }
 .rank-card .sub { font-size: 0.92rem; color: var(--muted); }
 .rank-card .sub b { color: var(--ink); font-family: var(--font-num); }
 .rank-card .calc { font-family: var(--font-num); font-size: 0.8rem; color: var(--muted); }
@@ -267,7 +270,7 @@ details.paste > summary { cursor: pointer; font-weight: 700; }
 .share { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
+footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; line-height: 1.5; }
 
 @media (max-width: 600px) {
   .holes { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -477,8 +480,8 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
 
 
 
-<script src="sync.js?v=20261117103517"></script>
-<script src="peoria.js?v=20261117103517"></script>
+<script src="sync.js?v=20261117104314"></script>
+<script src="peoria.js?v=20261117104314"></script>
 <script>
 (function () {
   'use strict';
@@ -1818,47 +1821,64 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   };
   /** 지금 주소(방에 있으면 초대 링크)를 바깥 브라우저로 여는 주소 */
   const shareableUrl = () => (room ? roomLink(room.id) : `${location.origin}${location.pathname}`);
+  // 처음 연 기기(설치 안 된 브라우저)에서는 설치 화면을 맨 위에 바로 띄운다. "웹으로 계속"을 누르면 다시 띄우지 않는다.
+  const INSTALL_SEEN_KEY = 'new-peoria-install-seen';
+  const seenInstall = () => { try { return localStorage.getItem(INSTALL_SEEN_KEY) === '1'; } catch (e) { return true; } };
+  let installOpen = canBeApp && !isStandalone() && !seenInstall();
+  let installDone = false;
+  /**
+   * 카톡·네이버 등 앱 안 브라우저는 설치가 안 되므로 열자마자 바깥 브라우저로 넘긴다(한 번만 시도).
+   * 카톡은 공식 openExternal 주소, 그 밖의 안드로이드 앱은 크롬 intent 주소를 쓴다. 아이폰의 다른 앱은 넘길 방법이 없어 안내만 한다.
+   */
+  function escapeInAppBrowser() {
+    if (!env.inApp) return;
+    try { if (sessionStorage.getItem('new-peoria-escaped')) return; sessionStorage.setItem('new-peoria-escaped', '1'); } catch (e) { return; }
+    const here = location.href;
+    if (env.kakao) location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(here)}`;
+    else if (env.android) location.href = `intent://${location.host}${location.pathname}${location.search}${location.hash}#Intent;scheme=https;package=com.android.chrome;end`;
+  }
+  const roomCodeLine = () => (room ? `<p>설치한 앱에서 <b>함께 입력</b>을 누르고 방 코드 <b class="room-code" style="font-size:1.2rem">${esc(fmtRoom(room.id))}</b>를 넣으세요.</p>` : '');
   function installSteps() {
     if (env.kakao) {
-      return `
-        <a class="btn-link primary" href="kakaotalk://web/openExternal?url=${encodeURIComponent(shareableUrl())}">${env.ios ? '사파리로' : '크롬으로'} 열기</a>
-`;
+      return `<a class="btn-link primary" href="kakaotalk://web/openExternal?url=${encodeURIComponent(shareableUrl())}">${env.ios ? '사파리로' : '크롬으로'} 열기</a>`;
     }
-    if (env.inApp) return `<p><b>지금 앱 안 브라우저에서 열려 있어 설치할 수 없습니다.</b> 오른쪽 위 <b>⋯ 메뉴 → 다른 브라우저로 열기</b>를 누른 뒤 다시 "앱 설치"를 누르세요.</p>`;
-    if (env.ios) {
-      return `<ol class="steps"><li>화면 아래(또는 위)의 <b>공유 버튼</b>(네모에 위쪽 화살표)을 누릅니다.</li>
-        <li>목록을 내려 <b>홈 화면에 추가</b>를 누릅니다.</li><li>오른쪽 위 <b>추가</b>를 누르면 홈 화면에 아이콘이 생깁니다.</li></ol>
-        <p class="help">사파리가 아닌 브라우저라면 사파리로 이 주소를 열어 주세요.</p>`;
-    }
-    if (env.samsung) return `<ol class="steps"><li>화면 아래 <b>≡ 메뉴</b>를 누릅니다.</li><li><b>현재 페이지 추가 → 홈 화면</b>을 누릅니다.</li></ol>`;
-    if (env.android) return `<ol class="steps"><li>오른쪽 위 <b>⋮ 메뉴</b>를 누릅니다.</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 누릅니다.</li></ol>`;
-    return `<p>주소창 오른쪽의 <b>설치 아이콘</b>(모니터에 화살표)을 누르거나, 브라우저 메뉴에서 <b>앱 설치</b>를 고르세요. 휴대폰에서 이 주소를 열면 홈 화면에 아이콘으로 둘 수 있습니다.</p>`;
+    if (env.inApp) return `<p>오른쪽 위 <b>⋯ → 다른 브라우저로 열기</b></p>`;
+    if (installEvent) return `<button type="button" class="primary" id="installNow" style="min-height:56px;font-size:1.1rem">앱 설치</button>`;
+    if (env.ios) return `<ol class="steps"><li><b>공유 버튼</b>(네모에 위쪽 화살표)</li><li><b>홈 화면에 추가</b></li><li><b>추가</b></li></ol>${roomCodeLine()}`;
+    if (env.samsung) return `<ol class="steps"><li>아래 <b>≡ 메뉴</b></li><li><b>현재 페이지 추가 → 홈 화면</b></li></ol>`;
+    if (env.android) return `<ol class="steps"><li>오른쪽 위 <b>⋮ 메뉴</b></li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b></li></ol>`;
+    return `<p>주소창 오른쪽 <b>설치 아이콘</b> 또는 브라우저 메뉴의 <b>앱 설치</b></p>`;
   }
-  let installOpen = false;
   function renderInstall() {
     const show = canBeApp && !isStandalone();
-    $('installBtn').hidden = !show;
-    $('installCard').hidden = !(show && (installOpen || env.inApp));
-    if (!$('installCard').hidden) {
-      $('installBody').innerHTML = `<div class="card-head"><h2>앱처럼 쓰기</h2><button type="button" class="ghost" id="installClose" aria-label="설치 안내 닫기">닫기</button></div>
-        ${installSteps()}`;
-    }
+    $('installCard').hidden = !(show && (installOpen || env.inApp || installDone));
+    $('installBtn').hidden = !show || installDone || !$('installCard').hidden;
+    if ($('installCard').hidden) return;
+    $('installBody').innerHTML = installDone
+      ? `<div class="card-head"><h2>설치 완료</h2><button type="button" class="ghost" id="installClose">닫기</button></div><p>홈 화면의 <b>신페리오</b> 아이콘으로 여세요.</p>`
+      : `<div class="card-head"><h2>앱 설치</h2><button type="button" class="ghost" id="installClose">웹으로 계속</button></div>${installSteps()}`;
   }
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; renderInstall(); });
-  window.addEventListener('appinstalled', () => { installEvent = null; installOpen = false; renderInstall(); });
+  window.addEventListener('appinstalled', () => { installEvent = null; installDone = true; renderInstall(); });
+  async function promptInstall() {
+    const ev = installEvent;
+    installEvent = null;
+    ev.prompt();
+    try { await ev.userChoice; } catch (err) { /* 사용자가 설치 창을 닫음 */ }
+    renderInstall();
+  }
   document.addEventListener('click', async (e) => {
     const t = e.target.closest('button');
     if (!t) return;
-    if (t.id === 'installClose') { installOpen = false; env.inApp = false; renderInstall(); return; }
-    if (t.id !== 'installBtn') return;
-    if (installEvent) {
-      const ev = installEvent;
-      installEvent = null;
-      ev.prompt();
-      try { await ev.userChoice; } catch (err) { /* 사용자가 설치 창을 닫음: 버튼은 남겨 다시 시도할 수 있게 */ }
+    if (t.id === 'installClose') {
+      installOpen = false; installDone = false; env.inApp = false;
+      try { localStorage.setItem(INSTALL_SEEN_KEY, '1'); } catch (err) { /* 저장소 없음: 다음에 다시 뜰 뿐 */ }
       renderInstall();
       return;
     }
+    if (t.id === 'installNow' && installEvent) { await promptInstall(); return; }
+    if (t.id !== 'installBtn') return;
+    if (installEvent) { await promptInstall(); return; }
     installOpen = !installOpen;
     renderInstall();
     if (installOpen) $('installCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -2075,6 +2095,7 @@ ${roomLink(id)}`;
   }
 
   // 시작: 온라인 방 복원 → 초대 링크(?room=) 처리 → 화면
+  escapeInAppBrowser();
   let startRoom = null;
   if (Sync) {
     try {
