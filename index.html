@@ -94,6 +94,17 @@ header.top { display: grid; gap: 10px; }
 #roomPill .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: currentColor; }
 #roomPill.warn { background: var(--mark); color: var(--mark-ink); border-color: var(--mark); }
 .room-card, .install-card { border-color: var(--green); }
+.room-card { gap: 16px; padding: 20px 18px; }
+.room-close { min-height: 44px; padding: 6px 12px; margin: -8px -8px -8px 0; }
+.room-status { display: block; font-size: 0.85rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+#roomBody { display: grid; gap: 16px; }
+#roomBody:empty, #roomMsg:empty { display: none; }
+.room-code-box { display: grid; gap: 2px; justify-items: center; text-align: center; background: var(--green-soft); border-radius: 12px; padding: 14px 12px 12px; }
+.room-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.room-actions .primary, .room-main { grid-column: 1 / -1; min-height: 52px; font-size: 1.05rem; }
+.room-danger { display: flex; justify-content: center; border-top: 1px solid var(--line); padding-top: 12px; }
+.room-or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.9rem; }
+.room-or::before, .room-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 /* 처음 연 브라우저: 화면 전체에 앱 설치 버튼 하나 */
 .install-card.install-full { position: fixed; inset: 0; z-index: 100; border: 0; border-radius: 0; background: var(--bg);
   display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top, 0px)) 24px max(24px, env(safe-area-inset-bottom, 0px)); overflow-y: auto; }
@@ -490,8 +501,8 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; line-h
 
 
 
-<script src="sync.js?v=20261117104723"></script>
-<script src="peoria.js?v=20261117104723"></script>
+<script src="sync.js?v=20261117105116"></script>
+<script src="peoria.js?v=20261117105116"></script>
 <script>
 (function () {
   'use strict';
@@ -1926,27 +1937,28 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; line-h
     if (!roomCardOpen) return;
     const body = $('roomBody');
     if (!room) {
-      body.innerHTML = `<h2>여럿이 함께 입력</h2>
+      body.innerHTML = `<div class="card-head"><h2>여럿이 함께 입력</h2><button type="button" class="ghost room-close" id="roomClose" aria-label="방 창 닫기">닫기</button></div>
         <p class="help">같은 방에 들어온 폰끼리 선수와 스코어가 실시간으로 합쳐집니다. 조마다 한 사람이 자기 조 스코어를 넣으면 모두의 화면에 순위가 같이 바뀝니다.</p>
-        <button type="button" class="primary" id="roomCreate" ${creatingRoom ? 'disabled' : ''}>${creatingRoom ? '방을 만드는 중…' : '새 방 만들고 초대 링크 복사'}</button>
+        <button type="button" class="primary room-main" id="roomCreate" ${creatingRoom ? 'disabled' : ''}>${creatingRoom ? '방을 만드는 중…' : '새 방 만들고 초대 링크 복사'}</button>
+        <div class="room-or">또는 방 코드로 들어가기</div>
         <form class="add-row" id="roomJoinForm">
           <input type="text" id="roomCodeInput" placeholder="방 코드 10자리" maxlength="11" autocomplete="off" aria-label="방 코드" style="text-transform:uppercase;font-family:var(--font-num)">
           <button type="submit">들어가기</button>
         </form>`;
       return;
     }
-    body.innerHTML = `<div class="card-head"><h2>온라인 방</h2><span class="muted">${esc(roomStatusText())}</span></div>
-      <div><span class="help">방 코드</span><div class="room-code">${esc(fmtRoom(room.id))}</div></div>
+    body.innerHTML = `<div class="card-head"><h2>온라인 방 <span class="room-status">${esc(roomStatusText())}</span></h2><button type="button" class="ghost room-close" id="roomClose" aria-label="방 창 닫기">닫기</button></div>
+      <div class="room-code-box"><span class="help">방 코드</span><div class="room-code">${esc(fmtRoom(room.id))}</div></div>
       <div class="invite-link" aria-label="초대 링크">${esc(roomLink(room.id))}</div>
-      <div class="row">
+      <div class="room-actions">
         <button type="button" class="primary" id="roomCopy">초대 링크 복사</button>
         ${navigator.share ? '<button type="button" class="soft" id="roomShare">공유</button>' : ''}
         <button type="button" id="roomLeave">방 나가기</button>
-        ${room.isOwner ? `<button type="button" class="${pendingRoomDelete ? 'danger' : 'ghost danger'}" id="roomDelete">${pendingRoomDelete ? '정말 방 지우기' : '방 지우기'}</button>` : ''}
       </div>
       <p class="lock-note">${room.isOwner
         ? '방장입니다. 코스·숨김홀·규칙은 이 폰에서만 바뀝니다. 라운드가 끝나면 이 폰에서 공개해야 다른 사람들도 결과를 봅니다.'
         : '코스·숨김홀·규칙은 <b>방장</b>만 바꿀 수 있습니다. 선수 명단의 <b>조</b>를 정해 두면 스코어 화면에서 내 조만 볼 수 있습니다.'}</p>
+      ${room.isOwner ? `<div class="room-danger"><button type="button" class="${pendingRoomDelete ? 'danger' : 'ghost danger'}" id="roomDelete">${pendingRoomDelete ? '정말 방 지우기' : '방 지우기'}</button></div>` : ''}
       ${room.note ? `<p class="msg err">${esc(room.note)}</p>` : ''}`;
   }
   function setRoomMsg(text, kind = '') { $('roomMsg').className = 'msg ' + kind; $('roomMsg').textContent = text; }
@@ -2031,6 +2043,11 @@ ${roomLink(id)}`;
   document.addEventListener('click', async (e) => {
     const t = e.target.closest('button');
     if (!t || !Sync) return;
+    if (t.id === 'roomClose' || (t.id === 'roomPill' && roomCardOpen && !creatingRoom)) {
+      // 열린 방 창은 닫기 버튼이나 위쪽 방 버튼을 다시 누르면 닫힌다
+      roomCardOpen = false; pendingRoomDelete = false; setRoomMsg(''); renderRoom();
+      return;
+    }
     if (t.id === 'roomPill' || t.id === 'roomCreate') {
       // 누르면 바로: 방에 없으면 방을 만들고, 있으면 그대로 초대 링크를 복사한다
       roomCardOpen = true;
