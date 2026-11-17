@@ -5,7 +5,7 @@
 // - 설치 때는 브라우저 HTTP 캐시를 건너뛰고 서버에서 새로 받는다(옛 파일이 끼어드는 것 방지).
 // - 정상 응답(200, 같은 출처 또는 CORS)만 캐시에 넣는다. 오류 페이지나 불투명 응답이 저장되지 않게.
 // CACHE 값은 build.mjs 가 빌드 시각으로 바꿔 넣는다.
-const CACHE = 'peoria-20261117100737';
+const CACHE = 'peoria-20261117103517';
 const ASSETS = ['./', './index.html', './peoria.js', './manifest.webmanifest',
   './sync.js', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 

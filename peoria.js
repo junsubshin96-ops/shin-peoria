@@ -39,7 +39,7 @@
     handicap: '핸디캡 적은 사람 (= 그로스 적은 사람)',
     countback: '카운트백 (후반 9 → 6 → 3 → 18번, 이어서 전반)',
     holeback: '18번 홀부터 한 홀씩 거꾸로',
-    age: '연장자',
+    age: '연장자 (출생연도 입력 필요)',
     shared: '공동 순위'
   });
 
@@ -53,7 +53,7 @@
     minZero: true,            // 음수 핸디 → 0
     rounding: 'round1',
     tieBreak: 'handicap',     // 1순위
-    tieBreak2: 'age',         // 2순위 (1순위로 못 가리면)
+    tieBreak2: 'countback',   // 2순위 (1순위로 못 가리면). 출생연도를 받지 않으려고 연장자 대신 카운트백이 기본
     excludeMedalist: false,   // 메달리스트는 네트 순위에서 제외 (1인 1수상)
     splitByGender: false      // 남녀 따로 순위
   });

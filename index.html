@@ -91,7 +91,11 @@ header.top { display: grid; gap: 10px; }
 #roomPill.live { background: var(--green); color: var(--on-green); border-color: var(--green); }
 #roomPill .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: currentColor; }
 #roomPill.warn { background: var(--mark); color: var(--mark-ink); border-color: var(--mark); }
-.room-card { border-color: var(--green); }
+.room-card, .install-card { border-color: var(--green); }
+.steps { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+a.btn-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 18px; border-radius: 12px; font-weight: 700; text-decoration: none; }
+a.btn-link.primary { background: var(--green); color: var(--on-green); }
+.invite-link { font-family: var(--font-num); font-size: 0.9rem; word-break: break-all; background: var(--green-soft); border-radius: 10px; padding: 10px 12px; user-select: all; }
 .room-code { font-family: var(--font-num); font-size: 1.6rem; font-weight: 700; letter-spacing: 0.08em; }
 .lock-note { font-size: 0.95rem; color: var(--muted); background: var(--green-soft); border-radius: 10px; padding: 10px 12px; }
 
@@ -329,6 +333,8 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     <button type="button" id="clearSample" class="primary">비우고 시작</button>
   </div>
 
+  <div class="card install-card" id="installCard" hidden><div id="installBody"></div></div>
+
   <div class="card room-card" id="roomCard" hidden>
     <div id="roomBody"></div>
     <div class="msg" id="roomMsg" role="status"></div>
@@ -350,17 +356,6 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       <div id="courseGrid"></div>
       <div class="stats" id="courseStats"></div>
       <label class="toggle"><input type="checkbox" id="hideHidden"> 라운드 중 숨김홀 가리기</label>
-      <details class="paste">
-        <summary>추첨 코드로 다시 뽑기·검증하기</summary>
-        <div style="display:grid;gap:10px;margin-top:10px">
-          <p class="help">추첨을 하면 6자리 코드와 <b>봉인값</b>이 생깁니다. 코드를 알면 숨김홀을 미리 알 수 있으니 라운드 전에는 <b>봉인값만</b> 단톡방에 올리세요. 끝난 뒤 코드를 공개하면 누구나 여기서 같은 숨김홀이 나오는지, 봉인값이 맞는지 확인할 수 있어 "나중에 골랐다"는 의심이 없습니다.</p>
-          <form class="add-row" id="codeForm">
-            <input type="text" id="codeInput" placeholder="예: K7P2QX" maxlength="6" autocomplete="off" aria-label="추첨 코드" style="text-transform:uppercase;font-family:var(--font-num)">
-            <button type="submit">이 코드로 추첨</button>
-          </form>
-          <div class="msg" id="codeMsg" role="status"></div>
-        </div>
-      </details>
     </div>
 
     <details class="card rules" id="rulesBox">
@@ -482,8 +477,8 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
 
 
 
-<script src="sync.js?v=20261117100737"></script>
-<script src="peoria.js?v=20261117100737"></script>
+<script src="sync.js?v=20261117103517"></script>
+<script src="peoria.js?v=20261117103517"></script>
 <script>
 (function () {
   'use strict';
@@ -505,7 +500,8 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   };
   const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
   const sumOf = (a) => a.reduce((x, y) => x + y, 0);
-  const playerLabel = (p, i) => p.name || `선수 ${i + 1}`;
+  // 식별번호가 있으면 "김철수·12" 처럼 붙여 같은 이름을 구분한다 (순위·복사 문구에도 그대로 쓰인다)
+  const playerLabel = (p, i) => (p.name || `선수 ${i + 1}`) + (p.memberNo ? `·${p.memberNo}` : '');
 
   // ---------- 상태 ----------
   function samplePlayers(pars) {
@@ -536,6 +532,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       currentHole: 0,
       hideHidden: false,
       isSample: withSample,
+      schemaV: 4,
       players: []
     };
   }
@@ -553,6 +550,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       scores,
       totals: totals && (totals.gross != null || totals.hiddenSum != null) ? totals : null,
       birthYear: intIn(p.birthYear, 1900, 2030),
+      memberNo: typeof p.memberNo === 'string' ? p.memberNo.replace(/[^0-9A-Za-z가-힣-]/g, '').slice(0, 10) : '',
       gender: p.gender === 'M' || p.gender === 'F' ? p.gender : '',
       group: intIn(p.group, 1, 30),
       order: Number.isFinite(p.order) ? p.order : null,
@@ -589,6 +587,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       seal: typeof s.seal === 'string' && /^[0-9A-F]{4}-[0-9A-F]{4}$/.test(s.seal) ? s.seal : null,
       hiddenCount: intIn(s.hiddenCount, 0, 18),
       viewGroup: intIn(s.viewGroup, 1, 30),
+      schemaV: intIn(s.schemaV, 0, 99) ?? 0,
       players
     };
   }
@@ -597,7 +596,18 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       const raw = localStorage.getItem(STORE_KEY);
       if (!raw) return null;
       const s = JSON.parse(raw);
-      return s && typeof s === 'object' ? cleanState(s) : null;
+      if (!s || typeof s !== 'object') return null;
+      const c = cleanState(s);
+      // v4 이전 기본값(동점 2순위 연장자)을 쓰던 기기: 출생연도를 넣은 선수가 없으면 카운트백으로 옮긴다
+      const st = c.settings;
+      // 저장 형식 4 이전에 한 번만 옮긴다. 그 뒤에 사용자가 연장자를 고르면 그대로 둔다.
+      if (c.schemaV < 4) {
+        const migrate = st.tieBreak2 === 'age' && st.tieBreak !== 'age' && !c.players.some((p) => p.birthYear != null);
+        const migrated = { ...c, schemaV: 4, settings: migrate ? { ...st, tieBreak2: 'countback' } : st };
+        localStorage.setItem(STORE_KEY, JSON.stringify(migrated)); // 옮긴 결과를 바로 저장해 다음에 다시 옮기지 않게
+        return migrated;
+      }
+      return c;
     } catch (e) { return null; }
   }
   let state = load() || (() => { const s = freshState(true); return { ...s, players: samplePlayers(s.pars) }; })();
@@ -649,7 +659,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       settings: s.settings, awardOpts: s.awardOpts
     };
   }
-  const playerKey = (p) => [p.id, p.name, p.scores, p.totals || null, p.birthYear ?? null, p.gender || '', p.group ?? null];
+  const playerKey = (p) => [p.id, p.name, p.scores, p.totals || null, p.birthYear ?? null, p.gender || '', p.group ?? null, p.memberNo || ''];
   function pushChanges(prev, next) {
     if (room.isOwner && ROOM_FIELDS.some((k) => !same(prev[k], next[k]))) Sync.updateRoom(roomPayload(next), syncError);
     const before = new Map(prev.players.map((p) => [p.id, p]));
@@ -662,6 +672,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       if (o.name !== p.name) f.name = p.name;
       ['birthYear', 'group'].forEach((k) => { if ((o[k] ?? null) !== (p[k] ?? null)) f[k] = p[k] ?? null; });
       if ((o.gender || '') !== (p.gender || '')) f.gender = p.gender || '';
+      if ((o.memberNo || '') !== (p.memberNo || '')) f.memberNo = p.memberNo || '';
       if (!same(o.totals || null, p.totals || null)) f.totals = p.totals || null;
       const sc = {};
       p.scores.forEach((v, h) => { if ((o.scores[h] ?? null) !== (v ?? null)) sc[h] = v ?? null; });
@@ -676,6 +687,13 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   function syncError(e) {
     if (!room) return;
     const code = (e && e.code) || '';
+    if (code === 'deleted') {
+      leaveRoomLocal();
+      roomCardOpen = false;
+      setRoomMsg('');
+      renderAll();
+      return;
+    }
     room.status = 'error';
     room.note = code.includes('permission') ? '서버가 이 변경을 거절했습니다. 방장만 바꿀 수 있는 항목일 수 있습니다.'
       : code === 'deleted' ? '방장이 방을 지웠습니다. 방을 나가 주세요.'
@@ -769,7 +787,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     lastRemoved = null;
     prevDraw = null;
     pendingUnlock = null;
-    ['copyMsg', 'pasteMsg', 'codeMsg', 'rosterMsg', 'hideMsg', 'resultMsg', 'tableMsg'].forEach((id) => { $(id).textContent = ''; });
+    ['copyMsg', 'pasteMsg', 'rosterMsg', 'hideMsg', 'resultMsg', 'tableMsg'].forEach((id) => { $(id).textContent = ''; });
     $('copyFallback').hidden = true;
     $('copyFallback').value = '';
     $('pasteBox').value = '';
@@ -851,37 +869,21 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       sealCache[code] = `${hex.slice(0, 4)}-${hex.slice(4)}`;
       try {
         if (state.drawCode === code) renderDrawInfo();
-        if ($('codeMsg').dataset.code === code) showCodeSeal(code);
         // 방장 폰: 봉인값이 준비되면 방에도 올린다. 아직 방 연결 전이면 연결된 뒤 roomPayload 가 함께 올린다.
         if (room && room.isOwner && room.connected && state.drawCode === code) Sync.updateRoom(roomPayload(state), syncError);
       } catch (err) { console.warn('봉인값 반영 실패', err); }
     }, () => { sealCache[code] = null; });
     return undefined;
   }
-  const sealText = (code) => { const v = sealOf(code); return v === undefined ? '계산 중…' : v === null ? '(이 브라우저에서는 만들 수 없음)' : v; };
   let prevDraw = null; // 직전에 지워진 추첨 (되돌리기용, 저장하지 않음)
   function rememberDraw() {
     if (state.drawCode) prevDraw = { code: state.drawCode, method: state.drawMethod, hidden: state.hidden, pars: state.pars };
   }
   function renderDrawInfo() {
     const box = $('drawInfo');
-    const methodLabel = { recipe: '파3·파4·파5 구성 맞춤', parSum: '파 합 맞춤 (구성표가 안 맞는 코스)', random: '무작위 (파 합도 못 맞춤)' };
-    if (state.drawCode) {
-      const code = state.drawCode;
-      box.hidden = false;
-      box.innerHTML = state.hideHidden
-        ? `봉인값 <b style="font-size:1.15rem;letter-spacing:0.06em">${esc(sealText(code))}</b><br><span class="muted">라운드 전에는 이 봉인값만 단톡방에 올리세요. 추첨 코드는 숨김홀을 공개할 때 함께 보입니다.</span>`
-        : `추첨 코드 <b style="font-size:1.15rem;letter-spacing:0.08em">${esc(code)}</b> · 봉인값 <b>${esc(sealText(code))}</b> · ${esc(methodLabel[state.drawMethod] || '')}<br><span class="muted">라운드 전에는 <b>봉인값만</b> 공유하세요. 코드를 알면 숨김홀을 미리 계산할 수 있습니다. 라운드가 끝나면 코드를 공개해 검증합니다. 홀이나 파를 손으로 바꾸면 코드가 사라집니다.</span>`;
-      return;
-    }
-    if (room && !room.isOwner && state.seal) {
-      box.hidden = false;
-      box.innerHTML = `방장이 올린 봉인값 <b style="font-size:1.15rem;letter-spacing:0.06em">${esc(state.seal)}</b><br><span class="muted">라운드가 끝나고 방장이 추첨 코드를 공개하면 아래 "추첨 코드로 다시 뽑기·검증하기"에서 확인할 수 있습니다.</span>`;
-      return;
-    }
     if (prevDraw && !state.hideHidden) {
       box.hidden = false;
-      box.innerHTML = `추첨 코드 ${esc(prevDraw.code)}가 지워졌습니다. <button type="button" class="soft" id="undoDraw">추첨 되돌리기</button>`;
+      box.innerHTML = `숨김홀 추첨이 지워졌습니다. <button type="button" class="soft" id="undoDraw">추첨 되돌리기</button>`;
       return;
     }
     box.hidden = true;
@@ -893,12 +895,6 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     prevDraw = null;
     renderCourse();
   });
-  function showCodeSeal(code) {
-    const msg = $('codeMsg');
-    if (msg.dataset.code !== code) return;
-    const el = msg.querySelector('[data-seal]');
-    if (el) el.textContent = sealText(code);
-  }
   const opts = (map, cur, labelOf = (v) => v) => Object.entries(map).map(([k, v]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${esc(labelOf(v))}</option>`).join('');
   function renderFormula() {
     const s = state.settings;
@@ -964,35 +960,6 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   });
   $('drawHidden').addEventListener('click', () => applyDraw(P.makeDrawCode(), 12));
   $('drawPeoria').addEventListener('click', () => applyDraw(P.makeDrawCode(), 6));
-  $('codeForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const code = $('codeInput').value.trim().toUpperCase();
-    const msg = $('codeMsg');
-    if (!/^[A-Z0-9]{6}$/.test(code)) { msg.className = 'msg err'; msg.textContent = '영문·숫자 6자리 코드를 넣으세요.'; return; }
-    if (!canEditCourse()) {
-      // 참가자 폰: 방의 숨김홀을 바꾸지 않고 검증만 한다
-      const count = state.hiddenCount || state.hidden.length || 12;
-      const d = P.drawFromCode(code, state.pars, count);
-      const match = state.hidden.length ? d.holes.join() === state.hidden.join() : null;
-      msg.className = match === false ? 'msg err' : 'msg ok';
-      msg.dataset.code = code;
-      msg.innerHTML = `코드 ${esc(code)}로 나오는 숨김홀: ${d.holes.map((h) => h + 1).join(', ')}번 홀. `
-        + (match === null ? '방장이 아직 숨김홀을 공개하지 않았습니다.' : match ? '방의 숨김홀과 같습니다. 검증되었습니다.' : '방의 숨김홀과 다릅니다!')
-        + `<br>이 코드의 봉인값: <b data-seal>${esc(sealText(code))}</b>${state.seal ? ` · 방장이 미리 올린 봉인값: <b>${esc(state.seal)}</b>` : ''}`;
-      return;
-    }
-    if (state.hideHidden) { msg.className = 'msg err'; msg.textContent = '숨김홀 가리기를 끄고 다시 시도하세요.'; return; }
-    const count = state.hidden.length === 6 ? 6 : 12;
-    const before = state.hidden.join();
-    rememberDraw();
-    const d = applyDraw(code, count);
-    msg.className = 'msg ok';
-    msg.dataset.code = code;
-    msg.innerHTML = (before === d.holes.join()
-      ? `코드 ${esc(code)}로 뽑은 숨김홀이 지금 숨김홀과 같습니다. 검증되었습니다.`
-      : `코드 ${esc(code)}로 ${count}홀을 뽑았습니다: ${d.holes.map((h) => h + 1).join(', ')}번 홀`)
-      + `<br>이 코드의 봉인값: <b data-seal>${esc(sealText(code))}</b> (라운드 전에 받은 봉인값과 같아야 합니다)`;
-  });
   const pick = (map, v, fallback) => (map[v] ? v : fallback);
   $('formulaSel').addEventListener('change', (e) => updateSetting('formula', pick(P.FORMULAS, e.target.value, 'coursePar')));
   $('holeCap').addEventListener('change', (e) => updateSetting('holeCap', pick(P.HOLE_CAPS, e.target.value, 'doublePar')));
@@ -1033,7 +1000,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     const withAge = s.tieBreak === 'age' || s.tieBreak2 === 'age';
     const withGender = s.splitByGender || s.maxHandicapF != null;
     const withGroup = !!room || state.players.some((p) => p.group);
-    const wide = withAge || withGender || withGroup;
+    const wide = true; // 번호 칸이 늘 있으므로 두 줄 배치
     $('roster').innerHTML = state.players.length
       ? state.players.map((p, i) => `<div class="roster-item${wide ? ' wide' : ''}">
           <span class="idx">${i + 1}</span>
@@ -1044,13 +1011,20 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
               <option value="">조</option>${Array.from({ length: 12 }, (_, k) => `<option value="${k + 1}"${p.group === k + 1 ? ' selected' : ''}>${k + 1}조</option>`).join('')}</select>` : ''}
             ${withGender ? `<select id="g-${p.id}" data-gender="${p.id}" aria-label="선수 ${i + 1} 성별">
               <option value=""${!p.gender ? ' selected' : ''}>성별</option><option value="M"${p.gender === 'M' ? ' selected' : ''}>남</option><option value="F"${p.gender === 'F' ? ' selected' : ''}>여</option></select>` : ''}
+            <input type="text" maxlength="10" id="m-${p.id}" data-memberno="${p.id}" value="${esc(p.memberNo || '')}" placeholder="번호" aria-label="선수 ${i + 1} 식별번호 (회원번호 등)" autocomplete="off">
             ${withAge ? `<input type="text" inputmode="numeric" maxlength="4" id="y-${p.id}" data-birth="${p.id}" value="${p.birthYear ?? ''}" placeholder="출생연도" aria-label="선수 ${i + 1} 출생연도">` : ''}
           </span>` : ''}
         </div>`).join('')
-        + (withAge ? `<p class="help">출생연도는 네트 타수가 같을 때 연장자를 앞 순위로 정하는 데만 씁니다. 몰라도 비워 두면 됩니다.</p>` : '')
       : `<p class="help">아직 선수가 없습니다. 아래에 이름을 넣고 추가하세요.</p>`;
   }
   $('roster').addEventListener('input', (e) => {
+    const mid = e.target.dataset.memberno;
+    if (mid) {
+      const v = e.target.value.replace(/[^0-9A-Za-z가-힣-]/g, '').slice(0, 10);
+      if (v !== e.target.value) e.target.value = v;
+      setState({ players: state.players.map((p) => (p.id === mid ? { ...p, memberNo: v } : p)) });
+      return;
+    }
     const bid = e.target.dataset.birth;
     if (bid) {
       // 입력 중에도 상태와 화면이 같도록 매번 저장한다. 4자리가 아니거나 범위 밖이면 빨간 테두리로 알린다.
@@ -1130,7 +1104,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     }
     leaveSample(true);
     const dup = state.players.some((p) => p.name === name);
-    setState({ players: [...state.players, { id: uid(), name, scores: Array(18).fill(null), totals: null, birthYear: null, gender: '', group: state.viewGroup ?? null }] });
+    setState({ players: [...state.players, { id: uid(), name, scores: Array(18).fill(null), totals: null, birthYear: null, memberNo: '', gender: '', group: state.viewGroup ?? null }] });
     $('newName').value = '';
     $('rosterMsg').className = dup ? 'msg err' : 'msg ok';
     $('rosterMsg').innerHTML = (dup ? `같은 이름(${esc(name)})이 이미 있습니다. 구분할 수 있게 바꿔 주세요.` : `${esc(name)} 추가 · 모두 ${state.players.length}명`)
@@ -1472,7 +1446,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       return;
     }
     leaveSample(true);
-    const added = rows.map((r) => ({ id: uid(), name: r.name.slice(0, 30), scores: r.scores, totals: null, birthYear: null, gender: '' }));
+    const added = rows.map((r) => ({ id: uid(), name: r.name.slice(0, 30), scores: r.scores, totals: null, birthYear: null, memberNo: '', gender: '', group: state.viewGroup ?? null }));
     const base = replace ? [] : state.players;
     const names = new Set(base.map((p) => p.name));
     const dups = added.filter((p) => names.has(p.name) || added.filter((q) => q.name === p.name).length > 1).map((p) => p.name);
@@ -1622,7 +1596,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
         <span class="line">${first[0] ? `네트 ${fmt(first[0].net)}` : ''}</span></div>
       <div class="slot"><span class="label">메달리스트 (최저 타수)</span><span class="who">${medal ? esc(medal.name) : '–'}</span>
         <span class="line">${medal ? `${medal.gross}타` : ''}</span></div>
-      <div class="checkline" style="grid-column:1/-1">숨김홀 ${state.hidden.map((h) => h + 1).join(' · ')}${state.drawCode ? ` · 추첨 코드 ${esc(state.drawCode)}` : ''}<br>
+      <div class="checkline" style="grid-column:1/-1">숨김홀 ${state.hidden.map((h) => h + 1).join(' · ')}<br>
         파 합 ${chk.hiddenPar} · 코스 파 ${chk.coursePar} · ${esc(P.FORMULAS[s.formula].split(':')[0])} · 계수 ${s.coefficient} · ${esc(P.HOLE_CAPS[s.holeCap].label)} · ${esc(P.ROUNDING[s.rounding].label)} · 상한 ${s.maxHandicap ?? '없음'}${s.maxHandicapF != null ? `(여 ${s.maxHandicapF})` : ''} · 동점 ${esc(P.TIE_BREAKS[s.tieBreak])} → ${esc(P.TIE_BREAKS[s.tieBreak2])}</div>` : '';
 
     const groups = res.groups && res.groups.length > 1 ? res.groups : null;
@@ -1731,7 +1705,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   function resultText(res) {
     const s = state.settings;
     const head = [state.eventName || '신페리오 결과', state.eventDate].filter(Boolean).join(' ');
-    const lines = [`[${head}]`, `숨김홀: ${state.hidden.map((h) => h + 1).join(', ')}${state.drawCode ? ` (추첨 코드 ${state.drawCode})` : ''}`,
+    const lines = [`[${head}]`, `숨김홀: ${state.hidden.map((h) => h + 1).join(', ')}`,
       `규칙: ${P.HOLE_CAPS[s.holeCap].label} · 계수 ${s.coefficient} · 상한 ${s.maxHandicap ?? '없음'} · 동점 ${P.TIE_BREAKS[s.tieBreak]} → ${P.TIE_BREAKS[s.tieBreak2]}`, ''];
     const line = (r) => `${r.rank}위 ${r.name}  네트 ${fmt(r.net)} (그로스 ${r.gross} / 핸디 ${fmt(r.handicap)})${r.tie ? ' 동률' : ''}${r.tieReason ? ` [${r.tieReason}]` : ''}`;
     if (res.groups && res.groups.length > 1) {
@@ -1828,15 +1802,66 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     }
   });
 
-  // 앱 설치 (설치 가능한 환경에서만 버튼 노출)
+  // ---------- 앱 설치 ----------
+  // 설치 창을 바로 띄울 수 있으면(안드로이드 크롬 등) 띄우고, 아니면 이 기기에 맞는 방법을 보여 준다.
+  // 카톡·네이버 등 앱 안 브라우저에서는 설치가 안 되므로 바깥 브라우저로 여는 길을 먼저 안내한다.
   let installEvent = null;
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; $('installBtn').hidden = false; });
-  $('installBtn').addEventListener('click', async () => {
-    if (!installEvent) return;
-    installEvent.prompt();
-    try { await installEvent.userChoice; } catch (err) { /* 사용자가 닫음 */ }
-    installEvent = null;
-    $('installBtn').hidden = true;
+  const UA = navigator.userAgent || '';
+  const isStandalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const canBeApp = 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+  const env = {
+    kakao: /KAKAOTALK/i.test(UA),
+    inApp: /KAKAOTALK|NAVER\(inapp|Line\/|Instagram|FBAN|FBAV|DaumApps|everytimeApp|BAND\//i.test(UA),
+    ios: /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+    samsung: /SamsungBrowser/i.test(UA),
+    android: /Android/i.test(UA)
+  };
+  /** 지금 주소(방에 있으면 초대 링크)를 바깥 브라우저로 여는 주소 */
+  const shareableUrl = () => (room ? roomLink(room.id) : `${location.origin}${location.pathname}`);
+  function installSteps() {
+    if (env.kakao) {
+      return `
+        <a class="btn-link primary" href="kakaotalk://web/openExternal?url=${encodeURIComponent(shareableUrl())}">${env.ios ? '사파리로' : '크롬으로'} 열기</a>
+`;
+    }
+    if (env.inApp) return `<p><b>지금 앱 안 브라우저에서 열려 있어 설치할 수 없습니다.</b> 오른쪽 위 <b>⋯ 메뉴 → 다른 브라우저로 열기</b>를 누른 뒤 다시 "앱 설치"를 누르세요.</p>`;
+    if (env.ios) {
+      return `<ol class="steps"><li>화면 아래(또는 위)의 <b>공유 버튼</b>(네모에 위쪽 화살표)을 누릅니다.</li>
+        <li>목록을 내려 <b>홈 화면에 추가</b>를 누릅니다.</li><li>오른쪽 위 <b>추가</b>를 누르면 홈 화면에 아이콘이 생깁니다.</li></ol>
+        <p class="help">사파리가 아닌 브라우저라면 사파리로 이 주소를 열어 주세요.</p>`;
+    }
+    if (env.samsung) return `<ol class="steps"><li>화면 아래 <b>≡ 메뉴</b>를 누릅니다.</li><li><b>현재 페이지 추가 → 홈 화면</b>을 누릅니다.</li></ol>`;
+    if (env.android) return `<ol class="steps"><li>오른쪽 위 <b>⋮ 메뉴</b>를 누릅니다.</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 누릅니다.</li></ol>`;
+    return `<p>주소창 오른쪽의 <b>설치 아이콘</b>(모니터에 화살표)을 누르거나, 브라우저 메뉴에서 <b>앱 설치</b>를 고르세요. 휴대폰에서 이 주소를 열면 홈 화면에 아이콘으로 둘 수 있습니다.</p>`;
+  }
+  let installOpen = false;
+  function renderInstall() {
+    const show = canBeApp && !isStandalone();
+    $('installBtn').hidden = !show;
+    $('installCard').hidden = !(show && (installOpen || env.inApp));
+    if (!$('installCard').hidden) {
+      $('installBody').innerHTML = `<div class="card-head"><h2>앱처럼 쓰기</h2><button type="button" class="ghost" id="installClose" aria-label="설치 안내 닫기">닫기</button></div>
+        ${installSteps()}`;
+    }
+  }
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; renderInstall(); });
+  window.addEventListener('appinstalled', () => { installEvent = null; installOpen = false; renderInstall(); });
+  document.addEventListener('click', async (e) => {
+    const t = e.target.closest('button');
+    if (!t) return;
+    if (t.id === 'installClose') { installOpen = false; env.inApp = false; renderInstall(); return; }
+    if (t.id !== 'installBtn') return;
+    if (installEvent) {
+      const ev = installEvent;
+      installEvent = null;
+      ev.prompt();
+      try { await ev.userChoice; } catch (err) { /* 사용자가 설치 창을 닫음: 버튼은 남겨 다시 시도할 수 있게 */ }
+      renderInstall();
+      return;
+    }
+    installOpen = !installOpen;
+    renderInstall();
+    if (installOpen) $('installCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   });
 
   // ---------- 온라인 방 화면 ----------
@@ -1850,7 +1875,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   }
   function renderRoom() {
     $('storageNote').textContent = room
-      ? '온라인 방: 같은 방 사람들과 함께 저장됩니다. 방을 나가면 이 기기의 내 기록으로 돌아갑니다.'
+      ? ''
       : '입력 내용은 이 기기에만 저장됩니다.';
     if (!Sync) return;
     const pill = $('roomPill');
@@ -1858,30 +1883,31 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     pill.className = room ? (room.status === 'error' || room.status === 'offline' || !navigator.onLine ? 'warn' : 'live') : 'soft';
     pill.innerHTML = room ? `<span class="dot" aria-hidden="true"></span>방 ${esc(fmtRoom(room.id))}` : '함께 입력';
     pill.setAttribute('aria-expanded', String(roomCardOpen));
-    pill.setAttribute('aria-label', room ? `온라인 방 ${fmtRoom(room.id)}, ${roomStatusText()}` : '여러 사람이 함께 입력하는 온라인 방');
+    pill.setAttribute('aria-label', room ? `온라인 방 ${fmtRoom(room.id)}, ${roomStatusText()}` : '함께 입력: 누르면 방을 만들고 초대 링크를 복사합니다');
     $('roomCard').hidden = !roomCardOpen;
     if (!roomCardOpen) return;
     const body = $('roomBody');
     if (!room) {
       body.innerHTML = `<h2>여럿이 함께 입력</h2>
         <p class="help">같은 방에 들어온 폰끼리 선수와 스코어가 실시간으로 합쳐집니다. 조마다 한 사람이 자기 조 스코어를 넣으면 모두의 화면에 순위가 같이 바뀝니다.</p>
-        <button type="button" class="primary" id="roomCreate">지금 라운드로 방 만들기</button>
+        <button type="button" class="primary" id="roomCreate" ${creatingRoom ? 'disabled' : ''}>${creatingRoom ? '방을 만드는 중…' : '새 방 만들고 초대 링크 복사'}</button>
         <form class="add-row" id="roomJoinForm">
           <input type="text" id="roomCodeInput" placeholder="방 코드 10자리" maxlength="11" autocomplete="off" aria-label="방 코드" style="text-transform:uppercase;font-family:var(--font-num)">
           <button type="submit">들어가기</button>
-        </form>
-        <p class="help">방 내용은 Google Firebase 서버(서울)에 저장됩니다. 라운드가 끝나면 방장이 "방 지우기"로 선수·스코어를 모두 지워 주세요. 방 코드를 아는 사람은 누구나 볼 수 있으니 실명 대신 별명을 써도 됩니다. 출생연도는 동점 처리에 필요할 때만 넣으세요.</p>`;
+        </form>`;
       return;
     }
     body.innerHTML = `<div class="card-head"><h2>온라인 방</h2><span class="muted">${esc(roomStatusText())}</span></div>
       <div><span class="help">방 코드</span><div class="room-code">${esc(fmtRoom(room.id))}</div></div>
+      <div class="invite-link" aria-label="초대 링크">${esc(roomLink(room.id))}</div>
       <div class="row">
         <button type="button" class="primary" id="roomCopy">초대 링크 복사</button>
+        ${navigator.share ? '<button type="button" class="soft" id="roomShare">공유</button>' : ''}
         <button type="button" id="roomLeave">방 나가기</button>
         ${room.isOwner ? `<button type="button" class="${pendingRoomDelete ? 'danger' : 'ghost danger'}" id="roomDelete">${pendingRoomDelete ? '정말 방 지우기' : '방 지우기'}</button>` : ''}
       </div>
       <p class="lock-note">${room.isOwner
-        ? '이 폰이 <b>방장</b>입니다. 코스·숨김홀·규칙은 이 폰에서만 바뀝니다. 시상까지 끝나면 위의 <b>방 지우기</b>로 서버의 기록을 지워 주세요. 숨김홀을 가린 동안에는 숨김홀이 서버에 올라가지 않습니다. 라운드가 끝나면 이 폰에서 공개해야 다른 사람들도 결과를 봅니다.'
+        ? '방장입니다. 코스·숨김홀·규칙은 이 폰에서만 바뀝니다. 라운드가 끝나면 이 폰에서 공개해야 다른 사람들도 결과를 봅니다.'
         : '코스·숨김홀·규칙은 <b>방장</b>만 바꿀 수 있습니다. 선수 명단의 <b>조</b>를 정해 두면 스코어 화면에서 내 조만 볼 수 있습니다.'}</p>
       ${room.note ? `<p class="msg err">${esc(room.note)}</p>` : ''}`;
   }
@@ -1932,34 +1958,63 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     resetUiState();
     state = load() || freshState(false);
   }
+  let creatingRoom = false;
+  const inviteText = (id) => `신페리오 함께 입력 (방 ${fmtRoom(id)})
+${roomLink(id)}`;
+  /** 지금 기록으로 방을 만든다. 방은 항상 숨김홀을 가린 채로 만든다(숨김홀이 한순간도 서버에 올라가지 않게) */
+  async function createRoomNow() {
+    if (hasSampleData()) clearSampleData();
+    if (!state.hideHidden) setState({ hideHidden: true });
+    const id = await Sync.createRoom(roomPayload(state), state.players, state.manualAwards);
+    enterRoomState(id, true, { ...state });
+    await connectRoom(id, true);
+    return id;
+  }
+  /** 초대 링크를 클립보드에 넣는다. 결과는 방 카드에 알린다. 실패하면 링크를 화면에 보여 손으로 복사하게 한다 */
+  async function copyInvite(idPromise) {
+    const textPromise = idPromise.then(inviteText);
+    let ok = false;
+    try {
+      if (navigator.clipboard && window.ClipboardItem && navigator.clipboard.write) {
+        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': textPromise.then((t) => new Blob([t], { type: 'text/plain' })) })]);
+      } else {
+        await navigator.clipboard.writeText(await textPromise);
+      }
+      ok = true;
+    } catch (err) {
+      try { await navigator.clipboard.writeText(await textPromise); ok = true; } catch (err2) { ok = false; }
+    }
+    let id;
+    try { id = await idPromise; } catch (err) { return; } // 방 만들기 실패는 호출한 쪽이 알린다
+    renderRoom();
+    setRoomMsg(ok ? '초대 링크를 복사했습니다. 단톡방에 붙여넣으세요.' : '자동 복사가 막혀 있습니다. 아래 링크를 길게 눌러 복사하거나 "공유"를 누르세요.', ok ? 'ok' : 'err');
+    return id;
+  }
   document.addEventListener('click', async (e) => {
     const t = e.target.closest('button');
     if (!t || !Sync) return;
-    if (t.id === 'roomPill') { roomCardOpen = !roomCardOpen; renderRoom(); if (roomCardOpen) $('roomCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
-    if (t.id === 'roomCreate') {
-      if (!navigator.onLine) { setRoomMsg('인터넷에 연결되어 있어야 방을 만들 수 있습니다.', 'err'); return; }
-      t.disabled = true;
-      setRoomMsg('방을 만드는 중…');
-      try {
-        if (hasSampleData()) clearSampleData();
-        // 방은 항상 숨김홀을 가린 채로 만든다: 숨김홀이 한순간도 서버에 올라가지 않게
-        if (!state.hideHidden) setState({ hideHidden: true });
-        const id = await Sync.createRoom(roomPayload(state), state.players, state.manualAwards);
-        enterRoomState(id, true, { ...state });
-        await connectRoom(id, true);
-        setRoomMsg('방을 만들었습니다. 숨김홀은 가린 상태로 시작합니다. 초대 링크를 단톡방에 보내세요.', 'ok');
-      } catch (err) {
-        setRoomMsg(roomErrorText(err), 'err');
-      } finally {
-        t.disabled = false;
-        renderRoom();
-      }
+    if (t.id === 'roomPill' || t.id === 'roomCreate') {
+      // 누르면 바로: 방에 없으면 방을 만들고, 있으면 그대로 초대 링크를 복사한다
+      roomCardOpen = true;
+      if (room) { copyInvite(Promise.resolve(room.id)); renderRoom(); return; }
+      if (!navigator.onLine) { renderRoom(); setRoomMsg('인터넷에 연결되어 있어야 방을 만들 수 있습니다.', 'err'); return; }
+      if (creatingRoom) return;
+      creatingRoom = true;
+      renderRoom();
+      setRoomMsg('방을 만들고 초대 링크를 복사하는 중…');
+      // 클립보드는 버튼을 누른 그 순간에 요청해야 사파리에서도 허용된다. 방 코드는 나중에 채워 넣는다.
+      const created = createRoomNow();
+      copyInvite(created);
+      try { await created; } catch (err) { setRoomMsg(roomErrorText(err), 'err'); }
+      creatingRoom = false;
+      renderRoom();
+      $('roomCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       return;
     }
-    if (t.id === 'roomCopy' && room) {
-      const text = `신페리오 방에 들어오세요: ${roomLink(room.id)} (방 코드 ${fmtRoom(room.id)})`;
-      try { await navigator.clipboard.writeText(text); setRoomMsg('초대 링크를 복사했습니다. 단톡방에 붙여넣으세요.', 'ok'); }
-      catch (err) { setRoomMsg(text); }
+    if (t.id === 'roomCopy' && room) { copyInvite(Promise.resolve(room.id)); return; }
+    if (t.id === 'roomShare' && room && navigator.share) {
+      try { await navigator.share({ title: '신페리오 함께 입력', text: inviteText(room.id), url: roomLink(room.id) }); }
+      catch (err) { /* 사용자가 공유 창을 닫음 */ }
       return;
     }
     if (t.id === 'roomLeave' && room) {
@@ -2014,6 +2069,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     $('eventDate').value = state.eventDate;
     $('sampleBar').hidden = !hasSampleData();
     renderRoom();
+    renderInstall();
     showTab();
     applyCourseLock();
   }
