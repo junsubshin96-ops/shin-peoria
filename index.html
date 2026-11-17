@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>[hidden]{display:none!important} body{margin:0}</style>
@@ -55,7 +55,7 @@ body {
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
 h1, h2, h3 { margin: 0; text-wrap: balance; }
-h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; }
+h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; word-break: keep-all; }
 h2 { font-size: 1.15rem; font-weight: 700; }
 p { margin: 0; }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
@@ -83,10 +83,17 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 /* 헤더 */
 header.top { display: grid; gap: 10px; }
-.brand { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.brand { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
+#roomPill { white-space: nowrap; }
 .brand-name { display: flex; align-items: center; gap: 10px; }
 .event { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-#installBtn { min-height: 38px; padding: 6px 12px; font-size: 0.9rem; }
+#installBtn, #roomPill { min-height: 44px; padding: 6px 14px; font-size: 0.95rem; }
+#roomPill.live { background: var(--green); color: var(--on-green); border-color: var(--green); }
+#roomPill .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: currentColor; }
+#roomPill.warn { background: var(--mark); color: var(--mark-ink); border-color: var(--mark); }
+.room-card { border-color: var(--green); }
+.room-code { font-family: var(--font-num); font-size: 1.6rem; font-weight: 700; letter-spacing: 0.08em; }
+.lock-note { font-size: 0.95rem; color: var(--muted); background: var(--green-soft); border-radius: 10px; padding: 10px 12px; }
 
 /* 하단 탭바 */
 nav.tabs {
@@ -105,7 +112,8 @@ nav.tabs a[aria-current="page"] { color: var(--green); background: var(--green-s
   background: var(--mark); color: var(--mark-ink); border-radius: var(--r); padding: 12px 14px; font-weight: 500; }
 
 section.panel { display: grid; gap: 14px; }
-.card { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.card { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
+#holeView, #tableView, #totalView { min-width: 0; }
 .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
 .step { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--green); color: var(--on-green); font-family: var(--font-num); font-size: 0.9rem; margin-right: 8px; vertical-align: 2px; }
 
@@ -118,11 +126,11 @@ section.panel { display: grid; gap: 14px; }
 .hole .tag { font-size: 0.72rem; font-weight: 700; color: var(--muted); }
 .hole.is-hidden { background: var(--mark); border-color: var(--mark-ink); color: var(--mark-ink); }
 .hole.is-hidden .tag { color: var(--mark-ink); }
-.hole select { padding: 2px 0; min-height: 34px; width: 100%; max-width: 56px; text-align: center; text-align-last: center; font-family: var(--font-num); font-weight: 600; border-radius: 8px; }
+.hole select { padding: 2px 0; min-height: 44px; width: 100%; max-width: 56px; text-align: center; text-align-last: center; font-family: var(--font-num); font-weight: 600; border-radius: 8px; }
 .stats { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 .stats b { font-family: var(--font-num); font-size: 1.1rem; }
 .warn { color: var(--flag); font-weight: 700; }
-.toggle { display: flex; align-items: center; gap: 10px; font-weight: 500; cursor: pointer; }
+.toggle { display: flex; align-items: center; gap: 10px; font-weight: 500; cursor: pointer; min-height: 44px; }
 .toggle input { width: 22px; height: 22px; accent-color: var(--green); flex: none; }
 details.rules > summary { cursor: pointer; font-weight: 700; font-size: 1.05rem; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 details.rules > summary::-webkit-details-marker { display: none; }
@@ -143,8 +151,8 @@ details.rules[open] > summary::after { content: "접기"; }
 .seg.seg3 { grid-template-columns: repeat(3, 1fr); }
 .settings select { min-height: 46px; }
 .lock { display: grid; gap: 12px; justify-items: center; text-align: center; padding: 28px 16px; }
-.lock b { font-size: 1.15rem; }
-.checkline { font-family: var(--font-num); font-size: 0.9rem; background: var(--green-soft); border-radius: 10px; padding: 10px 12px; line-height: 1.7; }
+.lock b { font-size: 1.15rem; text-wrap: balance; word-break: keep-all; }
+.checkline { font-size: 0.95rem; background: var(--green-soft); border-radius: 10px; padding: 10px 12px; line-height: 1.7; }
 .rank-card .why { font-size: 0.8rem; color: var(--flag); font-weight: 700; }
 .total-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px 84px; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .total-row:first-child { border-top: 0; }
@@ -164,7 +172,8 @@ details.rules[open] > summary::after { content: "접기"; }
 .manual-row { display: grid; grid-template-columns: 7.5em 5.5em minmax(0, 1fr) auto; gap: 6px; }
 .manual-row select, .manual-row input { min-width: 0; }
 @media (max-width: 520px) { .manual-row { grid-template-columns: 1fr 1fr; } .award { grid-template-columns: 1fr; gap: 2px; } }
-details.detail > summary { cursor: pointer; font-size: 0.82rem; color: var(--green); font-weight: 700; margin-top: 4px; }
+details.detail > summary { cursor: pointer; font-size: 0.9rem; color: var(--green); font-weight: 700; margin-top: 2px; min-height: 44px; display: flex; align-items: center; }
+.total-err { grid-column: 1 / -1; font-size: 0.9rem; color: var(--flag); font-weight: 700; }
 .hd-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin-top: 6px; }
 .hd-grid span { font-family: var(--font-num); font-size: 0.78rem; text-align: center; background: var(--mark); color: var(--mark-ink); border-radius: 6px; padding: 2px 0; }
 .hd-grid span.cut { background: var(--flag); color: #fff; }
@@ -178,7 +187,7 @@ details.detail > summary { cursor: pointer; font-size: 0.82rem; color: var(--gre
 /* 홀별 입력 */
 .strip { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; }
 .strip button {
-  min-height: 42px; padding: 0; font-family: var(--font-num); font-weight: 700; font-size: 1rem; position: relative; border-radius: 10px;
+  min-height: 46px; padding: 0; font-family: var(--font-num); font-weight: 700; font-size: 1rem; position: relative; border-radius: 10px;
 }
 .strip button.done { background: var(--green-soft); border-color: var(--green-soft); color: var(--green); }
 .strip button.cur { background: var(--green); border-color: var(--green); color: var(--on-green); }
@@ -209,7 +218,7 @@ table { border-collapse: collapse; width: 100%; }
 th, td { border-bottom: 1px solid var(--line); padding: 4px; text-align: center; white-space: nowrap; }
 thead th { font-size: 0.85rem; color: var(--muted); font-weight: 700; background: var(--card); }
 .score-table td input {
-  width: 2.4em; min-height: 40px; text-align: center; padding: 4px 0; border: 1.5px solid transparent; border-radius: 8px;
+  width: 2.6em; min-height: 44px; text-align: center; padding: 4px 0; border: 1.5px solid transparent; border-radius: 8px;
   background: transparent; font-family: var(--font-num); font-size: 1.05rem; font-weight: 600;
 }
 .score-table td input:hover { border-color: var(--line); }
@@ -263,8 +272,15 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
 @media (max-width: 380px) {
   .stepper { grid-template-columns: 48px 64px 48px; }
 }
+@media (max-width: 420px) {
+  /* 좁은 화면에서 "파4" 가 화살표에 가려 잘리지 않게 화살표를 뺀다 */
+  .hole select { -webkit-appearance: none; appearance: none; padding: 0; font-size: 0.95rem; }
+}
+/* 시상식 중에는 순위·시상 목록을 가려 우승자가 미리 보이지 않게 한다 */
+#panel-results.in-ceremony #summary, #panel-results.in-ceremony #rankList, #panel-results.in-ceremony #groupTabs,
+#panel-results.in-ceremony #incomplete, #panel-results.in-ceremony #awardsCard, #panel-results.in-ceremony #shareCard { display: none !important; }
 @media (min-width: 900px) {
-  nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); bottom: auto; border: 1.5px solid var(--line); border-radius: var(--r); padding: 6px; }
+  nav.tabs { position: sticky; top: max(8px, env(safe-area-inset-top, 0px)); bottom: auto; border: 1.5px solid var(--line); border-radius: var(--r); padding: 6px; }
   body { padding-bottom: 32px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -282,37 +298,62 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
         </svg>
         <h1>신페리오 계산기</h1>
       </div>
-      <button type="button" id="installBtn" class="soft" hidden>앱 설치</button>
+      <span class="row" style="gap:6px">
+        <button type="button" id="roomPill" class="soft" hidden aria-expanded="false" aria-controls="roomCard">함께 입력</button>
+        <button type="button" id="installBtn" class="soft" hidden>앱 설치</button>
+      </span>
     </div>
     <div class="event">
-      <input type="text" id="eventName" placeholder="모임 이름" aria-label="모임 이름">
+      <input type="text" id="eventName" placeholder="모임 이름" aria-label="모임 이름" maxlength="60">
       <input type="date" id="eventDate" aria-label="날짜">
     </div>
   </header>
+
+  <nav class="tabs" aria-label="화면">
+    <a href="#course" data-tab="course">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="3" x2="7" y2="20"/><path d="M7 3l10 3.5L7 10"/><ellipse cx="11" cy="20" rx="7" ry="1.5"/></svg>
+      코스
+    </a>
+    <a href="#scores" data-tab="scores">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+      스코어
+    </a>
+    <a href="#results" data-tab="results">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+      결과
+    </a>
+  </nav>
 
   <div class="sample" id="sampleBar" hidden>
     <span>예시 데이터로 채워져 있습니다.</span>
     <button type="button" id="clearSample" class="primary">비우고 시작</button>
   </div>
 
+  <div class="card room-card" id="roomCard" hidden>
+    <div id="roomBody"></div>
+    <div class="msg" id="roomMsg" role="status"></div>
+  </div>
+
   <!-- 1. 코스 -->
   <section class="panel" id="panel-course">
     <div class="card">
       <h2><span class="step">1</span>숨김홀 정하기</h2>
-      <p class="help">홀을 누르면 숨김홀(노란색)로 바뀝니다. 잘 모르겠으면 <b>자동 추첨</b>을 누르세요. 파는 홀 아래 숫자에서 바꿉니다.</p>
+      <p class="lock-note" id="courseLockNote" hidden>온라인 방에서는 코스·숨김홀·규칙을 방장만 바꿀 수 있습니다. 숨김홀은 방장이 공개하면 여기에 나타납니다.</p>
+      <p class="help" id="courseHelp">홀을 누르면 숨김홀(노란색)로 바뀝니다. 잘 모르겠으면 <b>신페리오 12홀 추첨</b>을 누르세요. 파는 홀 아래 숫자에서 바꿉니다.</p>
       <div class="row">
         <button type="button" id="drawHidden" class="primary grow">신페리오 12홀 추첨</button>
         <button type="button" id="drawPeoria">페리오 6홀</button>
         <button type="button" id="clearHidden">모두 해제</button>
       </div>
       <div class="checkline" id="drawInfo" hidden></div>
+      <div class="msg err" id="hideMsg" role="status"></div>
       <div id="courseGrid"></div>
       <div class="stats" id="courseStats"></div>
       <label class="toggle"><input type="checkbox" id="hideHidden"> 라운드 중 숨김홀 가리기</label>
       <details class="paste">
         <summary>추첨 코드로 다시 뽑기·검증하기</summary>
         <div style="display:grid;gap:10px;margin-top:10px">
-          <p class="help">자동 추첨을 하면 6자리 코드가 생깁니다. 라운드 전에 이 코드를 단톡방에 먼저 올려 두세요. 끝난 뒤 누구나 같은 코드로 같은 숨김홀이 나오는지 확인할 수 있어 "나중에 골랐다"는 의심이 없습니다.</p>
+          <p class="help">추첨을 하면 6자리 코드와 <b>봉인값</b>이 생깁니다. 코드를 알면 숨김홀을 미리 알 수 있으니 라운드 전에는 <b>봉인값만</b> 단톡방에 올리세요. 끝난 뒤 코드를 공개하면 누구나 여기서 같은 숨김홀이 나오는지, 봉인값이 맞는지 확인할 수 있어 "나중에 골랐다"는 의심이 없습니다.</p>
           <form class="add-row" id="codeForm">
             <input type="text" id="codeInput" placeholder="예: K7P2QX" maxlength="6" autocomplete="off" aria-label="추첨 코드" style="text-transform:uppercase;font-family:var(--font-num)">
             <button type="submit">이 코드로 추첨</button>
@@ -356,6 +397,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
           <input type="text" id="newName" placeholder="이름 입력 후 추가" aria-label="새 선수 이름" maxlength="30" enterkeyhint="done">
           <button type="submit" class="primary">추가</button>
         </form>
+        <div class="msg" id="rosterMsg" role="status"></div>
       </div>
     </details>
 
@@ -363,7 +405,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       <div class="card-head">
         <h2><span class="step">3</span>스코어 기록</h2>
       </div>
-      <div class="seg seg3" role="group" aria-label="입력 화면">
+      <div class="seg seg3" id="viewSeg" role="group" aria-label="입력 화면">
         <button type="button" data-view="hole">홀별</button>
         <button type="button" data-view="table">표</button>
         <button type="button" data-view="total">합계만</button>
@@ -373,11 +415,12 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       <div id="tableView" hidden>
         <p class="help" style="margin-bottom:10px">각 칸에 타수를 입력하세요. Enter를 누르면 다음 홀로 넘어갑니다.</p>
         <div class="scroll"><table class="score-table" id="scoreTable"></table></div>
+        <div class="msg err" id="tableMsg" role="status" style="margin-top:8px"></div>
         <details class="paste" style="margin-top:14px">
           <summary>엑셀에서 한꺼번에 붙여넣기</summary>
           <div style="display:grid;gap:10px;margin-top:10px">
             <p class="help">한 줄에 한 명씩 <b>이름</b>과 18홀 타수를 적습니다. 엑셀에서 복사한 그대로 붙여넣어도 됩니다.</p>
-            <textarea id="pasteBox" placeholder="홍길동	5	4	3	5	6	4	4	5	6	5	4	5	6	4	5	3	6	5"></textarea>
+            <textarea id="pasteBox" aria-label="붙여넣을 스코어" placeholder="홍길동	5	4	3	5	6	4	4	5	6	5	4	5	6	4	5	3	6	5"></textarea>
             <label class="toggle"><input type="checkbox" id="pasteRelative"> 숫자가 파 대비(파 0 · 보기 1 · 버디 -1)입니다</label>
             <div class="row">
               <button type="button" id="pasteAppend" class="primary">추가하기</button>
@@ -396,6 +439,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       <h2 id="resultTitle">결과</h2>
       <button type="button" id="ceremonyBtn" class="soft">시상식 모드</button>
     </div>
+    <div class="msg" id="resultMsg" role="status"></div>
     <div class="card ceremony" id="ceremony" hidden></div>
     <div class="summary" id="summary"></div>
     <div id="groupTabs" class="seg" role="group" aria-label="순위 구분" hidden></div>
@@ -405,7 +449,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       <h2>시상</h2>
       <div id="awardsList" class="awards"></div>
       <div class="row">
-        <label class="toggle"><input type="checkbox" id="optBooby"> 브비상 (뒤에서 2등)</label>
+        <label class="toggle"><input type="checkbox" id="optBooby"> 부비상 (뒤에서 2등)</label>
         <label class="toggle"><input type="checkbox" id="optMostPars"> 다파상</label>
       </div>
       <div style="display:grid;gap:8px">
@@ -419,7 +463,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
         </form>
       </div>
     </div>
-    <div class="card">
+    <div class="card" id="shareCard">
       <h2>결과 보내기</h2>
       <div class="share">
         <button type="button" id="copyText" class="primary">단톡방용 복사</button>
@@ -431,27 +475,15 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   </section>
 
   <footer>
-    <span>입력 내용은 이 기기에만 저장됩니다.</span>
+    <span id="storageNote">입력 내용은 이 기기에만 저장됩니다.</span>
     <span class="confirm" id="resetArea"><button type="button" class="ghost danger" id="resetAll">전체 초기화</button></span>
   </footer>
 </div>
 
-<nav class="tabs" aria-label="화면">
-  <a href="#course" data-tab="course">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="3" x2="7" y2="20"/><path d="M7 3l10 3.5L7 10"/><ellipse cx="11" cy="20" rx="7" ry="1.5"/></svg>
-    코스
-  </a>
-  <a href="#scores" data-tab="scores">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
-    스코어
-  </a>
-  <a href="#results" data-tab="results">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
-    결과
-  </a>
-</nav>
 
-<script src="peoria.js"></script>
+
+<script src="sync.js?v=20261117100737"></script>
+<script src="peoria.js?v=20261117100737"></script>
 <script>
 (function () {
   'use strict';
@@ -459,7 +491,18 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   const STORE_KEY = 'new-peoria-v1';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const uid = () => Math.random().toString(36).slice(2, 10);
+  /** 이름 뒤 조사를 받침에 맞춘다 (한글이 아니면 "을(를)") */
+  function withJosa(word, withFinal, withoutFinal) {
+    const code = String(word).charCodeAt(String(word).length - 1) - 0xac00;
+    if (code < 0 || code > 11171) return `${word}${withFinal}(${withoutFinal})`;
+    return word + (code % 28 ? withFinal : withoutFinal);
+  }
+  // 여러 폰이 한 방에서 선수를 만들므로 겹치지 않게 암호학적 난수로 12자리를 만든다
+  const uid = () => {
+    const a = new Uint8Array(12);
+    (window.crypto || {}).getRandomValues ? window.crypto.getRandomValues(a) : a.forEach((_, i) => { a[i] = Math.floor(Math.random() * 256); });
+    return Array.from(a, (b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+  };
   const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
   const sumOf = (a) => a.reduce((x, y) => x + y, 0);
   const playerLabel = (p, i) => p.name || `선수 ${i + 1}`;
@@ -474,7 +517,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       '정우진': [1,0,1,1,2,0,1,1,0, 1,1,0,2,1,0,1,1,1],
       '한소율': [1,2,1,1,1,0,2,1,1, 1,1,2,1,0,1,1,2,1]
     };
-    return Object.entries(deltas).map(([name, d]) => ({ id: uid(), name: name + ' (예시)', scores: d.map((x, i) => pars[i] + x) }));
+    return Object.entries(deltas).map(([name, d]) => ({ id: uid(), name: name + ' (예시)', sample: true, scores: d.map((x, i) => pars[i] + x) }));
   }
   function freshState(withSample) {
     const pars = [...P.DEFAULT_PARS];
@@ -488,7 +531,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       drawMethod: draw ? draw.method : null,
       settings: { ...P.DEFAULT_SETTINGS },
       awardOpts: { booby: false, mostPars: false },
-      manualAwards: withSample ? [{ id: uid(), type: '니어리스트', hole: 3, name: '정우진 (예시)' }, { id: uid(), type: '롱기스트', hole: 5, name: '박지훈 (예시)' }] : [],
+      manualAwards: withSample ? [{ id: uid(), type: '니어리스트', hole: 3, name: '정우진 (예시)', sample: true }, { id: uid(), type: '롱기스트', hole: 5, name: '박지훈 (예시)', sample: true }] : [],
       view: 'hole',
       currentHole: 0,
       hideHidden: false,
@@ -496,30 +539,250 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       players: []
     };
   }
+  // ---------- 저장값 정규화: 옛 버전·손상된 값이 와도 화면이 멈추지 않게 모든 필드를 검증해 새로 만든다 ----------
+  const str = (v, max) => (typeof v === 'string' ? v.slice(0, max) : '');
+  const intIn = (v, lo, hi) => (Number.isInteger(v) && v >= lo && v <= hi ? v : null);
+  function cleanPlayer(p) {
+    if (!p || typeof p !== 'object') return null;
+    const scores = Array.from({ length: 18 }, (_, i) => (Array.isArray(p.scores) && P.isScore(p.scores[i]) ? p.scores[i] : null));
+    const t = p.totals && typeof p.totals === 'object' ? p.totals : null;
+    const totals = t ? { gross: intIn(t.gross, 1, 300), hiddenSum: intIn(t.hiddenSum, 1, 300) } : null;
+    return {
+      id: typeof p.id === 'string' && /^[a-z0-9]{1,16}$/.test(p.id) ? p.id : uid(),
+      name: str(p.name, 30),
+      scores,
+      totals: totals && (totals.gross != null || totals.hiddenSum != null) ? totals : null,
+      birthYear: intIn(p.birthYear, 1900, 2030),
+      gender: p.gender === 'M' || p.gender === 'F' ? p.gender : '',
+      group: intIn(p.group, 1, 30),
+      order: Number.isFinite(p.order) ? p.order : null,
+      sample: p.sample === true
+    };
+  }
+  function cleanState(s) {
+    const base = freshState(false);
+    const pars = Array.isArray(s.pars) && s.pars.length === 18 && s.pars.every((p) => [3, 4, 5, 6].includes(p)) ? s.pars : base.pars;
+    const hidden = Array.isArray(s.hidden)
+      ? [...new Set(s.hidden.filter((h) => Number.isInteger(h) && h >= 0 && h < 18))].sort((a, b) => a - b)
+      : base.hidden;
+    const seen = new Set();
+    const players = (Array.isArray(s.players) ? s.players : []).map(cleanPlayer).filter((p) => p && !seen.has(p.id) && seen.add(p.id));
+    const manualAwards = (Array.isArray(s.manualAwards) ? s.manualAwards : [])
+      .filter((m) => m && typeof m === 'object')
+      .map((m) => ({ id: typeof m.id === 'string' ? m.id.slice(0, 16) : uid(), type: str(m.type, 20) || '기타', hole: intIn(m.hole, 1, 18), name: str(m.name, 30), sample: m.sample === true }));
+    return {
+      ...base,
+      eventName: str(s.eventName, 60),
+      eventDate: typeof s.eventDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s.eventDate) ? s.eventDate : base.eventDate,
+      pars,
+      hidden,
+      drawCode: typeof s.drawCode === 'string' && /^[A-Z0-9]{6}$/.test(s.drawCode) ? s.drawCode : null,
+      drawMethod: ['recipe', 'parSum', 'random'].includes(s.drawMethod) ? s.drawMethod : null,
+      settings: P.normalizeSettings(s.settings),
+      awardOpts: { booby: s.awardOpts?.booby === true, mostPars: s.awardOpts?.mostPars === true },
+      manualAwards,
+      view: ['hole', 'table', 'total'].includes(s.view) ? s.view : 'hole',
+      currentHole: intIn(s.currentHole, 0, 17) ?? 0,
+      hideHidden: s.hideHidden === true,
+      isSample: s.isSample === true,
+      // 온라인 방 참가자용: 방장이 올린 봉인값과 숨김홀 개수 (숨김홀 자체는 공개 전까지 오지 않음)
+      seal: typeof s.seal === 'string' && /^[0-9A-F]{4}-[0-9A-F]{4}$/.test(s.seal) ? s.seal : null,
+      hiddenCount: intIn(s.hiddenCount, 0, 18),
+      viewGroup: intIn(s.viewGroup, 1, 30),
+      players
+    };
+  }
   function load() {
     try {
       const raw = localStorage.getItem(STORE_KEY);
       if (!raw) return null;
       const s = JSON.parse(raw);
-      if (!Array.isArray(s.pars) || s.pars.length !== 18 || !Array.isArray(s.players)) return null;
-      return {
-        ...freshState(false), ...s,
-        settings: P.normalizeSettings(s.settings),
-        awardOpts: { booby: false, mostPars: false, ...s.awardOpts },
-        manualAwards: Array.isArray(s.manualAwards) ? s.manualAwards : []
-      };
+      return s && typeof s === 'object' ? cleanState(s) : null;
     } catch (e) { return null; }
   }
   let state = load() || (() => { const s = freshState(true); return { ...s, players: samplePlayers(s.pars) }; })();
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* 저장 불가 환경에서도 화면은 동작 */ } }
-  function setState(patch) { state = { ...state, ...patch }; save(); }
-  function leaveSample() { if (state.isSample) { setState({ isSample: false }); $('sampleBar').hidden = true; } }
+  // 방에 들어가 있는 동안에는 개인 기록(STORE_KEY)을 건드리지 않고 방 기록(ROOM_KEY)에 따로 저장한다.
+  // 방을 나가면 개인 기록이 그대로 돌아온다.
+  const ROOM_KEY = 'new-peoria-room-v1';
+  let room = null; // { id, isOwner, status, pendingOnline }
+  let applyingRemote = false;
+  const OWNER_SECRET_KEY = 'new-peoria-owner-';
+  function save() {
+    try {
+      if (room) {
+        localStorage.setItem(ROOM_KEY, JSON.stringify({ id: room.id, isOwner: room.isOwner, state }));
+        // 숨김홀은 서버에 없을 수 있으므로(가린 동안) 방장 폰에 방별로 따로 보관한다. 방을 나가도 남는다.
+        if (room.isOwner && state.hidden.length) {
+          localStorage.setItem(OWNER_SECRET_KEY + room.id, JSON.stringify({ hidden: state.hidden, drawCode: state.drawCode, drawMethod: state.drawMethod }));
+        }
+      } else localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    } catch (e) { /* 저장 불가 환경에서도 화면은 동작 */ }
+  }
+  function loadOwnerSecret(id) {
+    try {
+      const v = JSON.parse(localStorage.getItem(OWNER_SECRET_KEY + id) || 'null');
+      const c = v && cleanState({ hidden: v.hidden, drawCode: v.drawCode, drawMethod: v.drawMethod });
+      return c && c.hidden.length ? { hidden: c.hidden, drawCode: c.drawCode, drawMethod: c.drawMethod } : null;
+    } catch (e) { return null; }
+  }
+  function setState(patch) {
+    const prev = state;
+    state = { ...state, ...patch };
+    save();
+    if (room && !applyingRemote) pushChanges(prev, state);
+  }
+
+  // ---------- 온라인 방 (여러 사람 동시 입력) ----------
+  const Sync = window.PeoriaSync && window.PEORIA_FIREBASE ? window.PeoriaSync : null;
+  const ROOM_FIELDS = ['eventName', 'eventDate', 'pars', 'hidden', 'hideHidden', 'drawCode', 'drawMethod', 'settings', 'awardOpts'];
+  const canEditCourse = () => !room || room.isOwner;
+  const fmtRoom = (id) => `${id.slice(0, 5)}-${id.slice(5)}`;
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  /** 서버에 올릴 방 정보. 숨김홀을 가린 동안에는 숨김홀·추첨 코드를 빼고 봉인값만 올린다 */
+  function roomPayload(s) {
+    const hide = s.hideHidden;
+    const seal = s.drawCode ? sealOf(s.drawCode) : null;
+    return {
+      eventName: s.eventName, eventDate: s.eventDate || '', pars: s.pars,
+      hidden: hide ? null : s.hidden, hiddenCount: s.hidden.length, hideHidden: hide,
+      drawCode: hide ? null : s.drawCode, drawMethod: s.drawMethod, seal: typeof seal === 'string' ? seal : null,
+      settings: s.settings, awardOpts: s.awardOpts
+    };
+  }
+  const playerKey = (p) => [p.id, p.name, p.scores, p.totals || null, p.birthYear ?? null, p.gender || '', p.group ?? null];
+  function pushChanges(prev, next) {
+    if (room.isOwner && ROOM_FIELDS.some((k) => !same(prev[k], next[k]))) Sync.updateRoom(roomPayload(next), syncError);
+    const before = new Map(prev.players.map((p) => [p.id, p]));
+    const after = new Set(next.players.map((p) => p.id));
+    next.players.forEach((p, i) => {
+      const o = before.get(p.id);
+      if (!o) { Sync.setPlayer(p, p.order ?? Date.now() + i, syncError); return; }
+      if (same(playerKey(o), playerKey(p))) return;
+      const f = {};
+      if (o.name !== p.name) f.name = p.name;
+      ['birthYear', 'group'].forEach((k) => { if ((o[k] ?? null) !== (p[k] ?? null)) f[k] = p[k] ?? null; });
+      if ((o.gender || '') !== (p.gender || '')) f.gender = p.gender || '';
+      if (!same(o.totals || null, p.totals || null)) f.totals = p.totals || null;
+      const sc = {};
+      p.scores.forEach((v, h) => { if ((o.scores[h] ?? null) !== (v ?? null)) sc[h] = v ?? null; });
+      if (Object.keys(sc).length) f.scores = sc;
+      Sync.updatePlayer(p.id, f, syncError);
+    });
+    prev.players.forEach((p) => { if (!after.has(p.id)) Sync.deletePlayer(p.id, syncError); });
+    const ab = new Set(prev.manualAwards.map((a) => a.id)), aa = new Set(next.manualAwards.map((a) => a.id));
+    next.manualAwards.forEach((a) => { if (!ab.has(a.id)) Sync.addAward(a, syncError); });
+    prev.manualAwards.forEach((a) => { if (!aa.has(a.id)) Sync.deleteAward(a.id, syncError); });
+  }
+  function syncError(e) {
+    if (!room) return;
+    const code = (e && e.code) || '';
+    room.status = 'error';
+    room.note = code.includes('permission') ? '서버가 이 변경을 거절했습니다. 방장만 바꿀 수 있는 항목일 수 있습니다.'
+      : code === 'deleted' ? '방장이 방을 지웠습니다. 방을 나가 주세요.'
+      : '서버와 연결하지 못했습니다. 입력은 이 폰에 남아 있고 연결되면 다시 올립니다.';
+    renderRoom();
+  }
+  /** 서버에서 온 값으로 화면 상태를 바꾼다. 다시 서버로 올리지 않는다 */
+  function applyRemote(patch, meta) {
+    if (meta && room) room.status = meta.pending ? 'pending' : meta.fromCache ? 'offline' : 'synced';
+    const next = cleanState({ ...state, ...patch });
+    const changed = ['players', 'manualAwards', ...ROOM_FIELDS, 'seal', 'hiddenCount'].some((k) => !same(state[k], next[k]));
+    if (changed) {
+      applyingRemote = true;
+      state = next;
+      save();
+      applyingRemote = false;
+      scheduleRender();
+    } else {
+      renderRoom();
+    }
+  }
+  const remoteHandlers = {
+    onRoom(d, meta) {
+      const patch = {
+        eventName: d.eventName || '', eventDate: d.eventDate || '', pars: d.pars, settings: d.settings,
+        awardOpts: d.awardOpts || {}, hideHidden: d.hideHidden === true, seal: d.seal || null, hiddenCount: d.hiddenCount ?? null
+      };
+      // 방장 폰의 숨김홀·추첨 코드가 원본이다. 참가자만 서버 값을 받는다(가린 동안에는 비어 있음).
+      if (room && !room.isOwner) Object.assign(patch, { hidden: Array.isArray(d.hidden) ? d.hidden : [], drawCode: d.drawCode || null, drawMethod: d.drawMethod || null });
+      if (room && room.isOwner) Object.assign(patch, { hidden: state.hidden, drawCode: state.drawCode, drawMethod: state.drawMethod });
+      applyRemote(patch, meta);
+    },
+    onPlayers(list, meta) { applyRemote({ players: list }, meta); },
+    onAwards(list) { applyRemote({ manualAwards: list }); },
+    onError: syncError
+  };
+  // 입력 칸에 글자를 넣는 중이면 다시 그리지 않고, 손을 떼면 반영한다
+  let renderDeferred = false;
+  function scheduleRender() {
+    const a = document.activeElement;
+    if (a && a.matches && a.matches('input[type="text"], input[type="number"], textarea') && a.closest('.wrap')) {
+      if (!renderDeferred) {
+        renderDeferred = true;
+        a.addEventListener('blur', () => { renderDeferred = false; setTimeout(scheduleRender, 0); }, { once: true });
+      }
+      renderRoom();
+      return;
+    }
+    const id = a && a.id;
+    renderAll();
+    if (id && $(id) && document.activeElement !== $(id)) $(id).focus({ preventScroll: true });
+  }
+  /**
+   * 예시 상태를 끝낸다. purge=true 면(새 선수 추가·붙여넣기처럼 실제 사용을 시작할 때) 예시 선수·예시 시상·예시 모임 이름을 지운다.
+   * 예시 선수 이름을 고치는 등 예시를 그대로 쓰는 경우에는 purge=false 로 막대만 내린다.
+   */
+  function leaveSample(purge = false) {
+    if (!state.isSample) return;
+    const patch = { isSample: false };
+    if (purge) {
+      patch.players = state.players.filter((p) => !p.sample);
+      patch.manualAwards = state.manualAwards.filter((m) => !m.sample);
+      if (/\(예시\)/.test(state.eventName)) patch.eventName = '';
+      $('eventName').value = patch.eventName ?? state.eventName;
+    }
+    setState(patch);
+    $('sampleBar').hidden = !hasSampleData();
+  }
+  // 예시 선수·시상이 하나라도 남아 있으면 "비우고 시작" 막대를 계속 보여 준다
+  const hasSampleData = () => state.isSample || state.players.some((p) => p.sample) || state.manualAwards.some((m) => m.sample);
+  function clearSampleData() {
+    const players = state.players.filter((p) => !p.sample);
+    // 예시 숨김홀은 누구나 아는 값이므로 새로 추첨해 둔다
+    const draw = state.drawCode ? null : P.drawFromCode(P.makeDrawCode(), state.pars, 12);
+    setState({
+      ...(draw ? { hidden: draw.holes, drawCode: draw.code, drawMethod: draw.method } : {}),
+      isSample: false,
+      players,
+      manualAwards: state.manualAwards.filter((m) => !m.sample),
+      eventName: /\(예시\)/.test(state.eventName) ? '' : state.eventName,
+      currentHole: players.length ? state.currentHole : 0
+    });
+  }
+  // 모듈 변수 초기화 (비우고 시작·전체 초기화)
+  function resetUiState() {
+    ceremony = null;
+    groupKey = 'all';
+    lastResult = null;
+    pendingDelete = null;
+    rosterInit = false;
+    lastRemoved = null;
+    prevDraw = null;
+    pendingUnlock = null;
+    ['copyMsg', 'pasteMsg', 'codeMsg', 'rosterMsg', 'hideMsg', 'resultMsg', 'tableMsg'].forEach((id) => { $(id).textContent = ''; });
+    $('copyFallback').hidden = true;
+    $('copyFallback').value = '';
+    $('pasteBox').value = '';
+  }
 
   // ---------- 탭 ----------
   const TABS = ['course', 'scores', 'results'];
   function currentTab() { const h = location.hash.slice(1); return TABS.includes(h) ? h : 'course'; }
+  let lastTab = null;
   function showTab() {
     const name = currentTab();
+    if (lastTab && lastTab !== name) $('roomMsg').textContent = ''; // 지난 화면의 방 안내가 남지 않게
+    lastTab = name;
     TABS.forEach((t) => { $('panel-' + t).hidden = t !== name; });
     document.querySelectorAll('nav.tabs a').forEach((a) => {
       if (a.dataset.tab === name) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
@@ -529,9 +792,14 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     if (name === 'course') renderCourse();
   }
   window.addEventListener('hashchange', () => { showTab(); window.scrollTo(0, 0); });
+  // 탭 이동은 기록을 쌓지 않는다 (뒤로가기를 눌렀을 때 탭을 거슬러 가지 않고 앱을 나가게)
   document.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
-    if (go) location.hash = '#' + go.dataset.go;
+    const link = e.target.closest('a[href^="#"]');
+    const tab = go ? go.dataset.go : link ? link.getAttribute('href').slice(1) : null;
+    if (!tab || !TABS.includes(tab)) return;
+    e.preventDefault();
+    if (currentTab() !== tab || location.hash !== '#' + tab) location.replace('#' + tab);
   });
 
   // ---------- 1. 코스 ----------
@@ -553,7 +821,8 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     };
     $('courseGrid').innerHTML = `<div style="display:grid;gap:14px">${nine(0, '전반 OUT')}${nine(9, '후반 IN')}</div>`;
 
-    const n = state.hidden.length;
+    // 온라인 방 참가자는 가린 동안 숨김홀 목록이 없고 개수(hiddenCount)만 받는다
+    const n = state.hidden.length || (state.hideHidden && state.hiddenCount) || 0;
     const chk = P.courseCheck(state.pars, state.hidden);
     const mode = n === 12 ? '신페리오' : n === 6 ? '페리오' : '사용자 지정';
     $('courseStats').innerHTML = state.hideHidden
@@ -563,14 +832,72 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
          <span>숨김홀 파 합 <b>${chk.hiddenPar}</b></span>
          ${n && n !== 12 && n !== 6 ? `<span class="warn">보통 12개(신페리오)나 6개(페리오)를 씁니다</span>` : ''}
          ${chk.warnings.map((w) => `<span class="warn">${esc(w)}</span>`).join('')}`;
-    ['drawHidden', 'drawPeoria', 'clearHidden'].forEach((id) => { $(id).disabled = state.hideHidden; });
+    ['drawHidden', 'drawPeoria', 'clearHidden'].forEach((id) => { $(id).disabled = state.hideHidden && !(room && id !== 'clearHidden'); });
     $('hideHidden').checked = state.hideHidden;
-    const methodLabel = { recipe: '파3·파4·파5 구성 맞춤', parSum: '파 합 맞춤 (구성표가 안 맞는 코스)', random: '무작위 (파 합도 못 맞춤)' };
-    $('drawInfo').hidden = !state.drawCode;
-    $('drawInfo').innerHTML = state.drawCode
-      ? `추첨 코드 <b style="font-size:1.15rem;letter-spacing:0.08em">${esc(state.drawCode)}</b> · ${esc(methodLabel[state.drawMethod] || '')}<br><span class="muted">라운드 전에 이 코드를 단톡방에 올려 두면 나중에 검증할 수 있습니다. 홀을 손으로 바꾸면 코드가 사라집니다.</span>`
-      : '';
+    renderDrawInfo();
     renderFormula();
+    applyCourseLock();
+  }
+  // ---------- 추첨 코드 봉인 ----------
+  // 코드를 알면 숨김홀을 계산할 수 있으므로 라운드 전에는 코드의 해시(봉인값)만 공유한다.
+  const sealCache = {};
+  function sealOf(code) {
+    if (code in sealCache) return sealCache[code];
+    sealCache[code] = undefined;
+    const subtle = window.crypto && window.crypto.subtle;
+    if (!subtle) { sealCache[code] = null; return null; }
+    subtle.digest('SHA-256', new TextEncoder().encode('shin-peoria|' + code)).then((buf) => {
+      const hex = Array.from(new Uint8Array(buf).slice(0, 4), (b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+      sealCache[code] = `${hex.slice(0, 4)}-${hex.slice(4)}`;
+      try {
+        if (state.drawCode === code) renderDrawInfo();
+        if ($('codeMsg').dataset.code === code) showCodeSeal(code);
+        // 방장 폰: 봉인값이 준비되면 방에도 올린다. 아직 방 연결 전이면 연결된 뒤 roomPayload 가 함께 올린다.
+        if (room && room.isOwner && room.connected && state.drawCode === code) Sync.updateRoom(roomPayload(state), syncError);
+      } catch (err) { console.warn('봉인값 반영 실패', err); }
+    }, () => { sealCache[code] = null; });
+    return undefined;
+  }
+  const sealText = (code) => { const v = sealOf(code); return v === undefined ? '계산 중…' : v === null ? '(이 브라우저에서는 만들 수 없음)' : v; };
+  let prevDraw = null; // 직전에 지워진 추첨 (되돌리기용, 저장하지 않음)
+  function rememberDraw() {
+    if (state.drawCode) prevDraw = { code: state.drawCode, method: state.drawMethod, hidden: state.hidden, pars: state.pars };
+  }
+  function renderDrawInfo() {
+    const box = $('drawInfo');
+    const methodLabel = { recipe: '파3·파4·파5 구성 맞춤', parSum: '파 합 맞춤 (구성표가 안 맞는 코스)', random: '무작위 (파 합도 못 맞춤)' };
+    if (state.drawCode) {
+      const code = state.drawCode;
+      box.hidden = false;
+      box.innerHTML = state.hideHidden
+        ? `봉인값 <b style="font-size:1.15rem;letter-spacing:0.06em">${esc(sealText(code))}</b><br><span class="muted">라운드 전에는 이 봉인값만 단톡방에 올리세요. 추첨 코드는 숨김홀을 공개할 때 함께 보입니다.</span>`
+        : `추첨 코드 <b style="font-size:1.15rem;letter-spacing:0.08em">${esc(code)}</b> · 봉인값 <b>${esc(sealText(code))}</b> · ${esc(methodLabel[state.drawMethod] || '')}<br><span class="muted">라운드 전에는 <b>봉인값만</b> 공유하세요. 코드를 알면 숨김홀을 미리 계산할 수 있습니다. 라운드가 끝나면 코드를 공개해 검증합니다. 홀이나 파를 손으로 바꾸면 코드가 사라집니다.</span>`;
+      return;
+    }
+    if (room && !room.isOwner && state.seal) {
+      box.hidden = false;
+      box.innerHTML = `방장이 올린 봉인값 <b style="font-size:1.15rem;letter-spacing:0.06em">${esc(state.seal)}</b><br><span class="muted">라운드가 끝나고 방장이 추첨 코드를 공개하면 아래 "추첨 코드로 다시 뽑기·검증하기"에서 확인할 수 있습니다.</span>`;
+      return;
+    }
+    if (prevDraw && !state.hideHidden) {
+      box.hidden = false;
+      box.innerHTML = `추첨 코드 ${esc(prevDraw.code)}가 지워졌습니다. <button type="button" class="soft" id="undoDraw">추첨 되돌리기</button>`;
+      return;
+    }
+    box.hidden = true;
+    box.innerHTML = '';
+  }
+  $('drawInfo').addEventListener('click', (e) => {
+    if (e.target.id !== 'undoDraw' || !prevDraw) return;
+    setState({ hidden: prevDraw.hidden, pars: prevDraw.pars, drawCode: prevDraw.code, drawMethod: prevDraw.method });
+    prevDraw = null;
+    renderCourse();
+  });
+  function showCodeSeal(code) {
+    const msg = $('codeMsg');
+    if (msg.dataset.code !== code) return;
+    const el = msg.querySelector('[data-seal]');
+    if (el) el.textContent = sealText(code);
   }
   const opts = (map, cur, labelOf = (v) => v) => Object.entries(map).map(([k, v]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${esc(labelOf(v))}</option>`).join('');
   function renderFormula() {
@@ -579,7 +906,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     const mult = n ? fmt(Math.round((18 / n) * 1000) / 1000) : '?';
     const hp = P.courseCheck(state.pars, state.hidden).hiddenPar;
     const main = s.formula === 'overPar'
-      ? `핸디 = (숨김홀 ${n}개 합 − ${hp}) × ${mult} × ${s.coefficient}`
+      ? `핸디 = (숨김홀 ${n}개 합 − ${state.hideHidden ? '숨김홀 파 합' : hp}) × ${mult} × ${s.coefficient}`
       : `핸디 = (숨김홀 ${n}개 합 × ${mult} − ${sumOf(state.pars)}) × ${s.coefficient}`;
     $('formula').innerHTML = `${main}<br>네트 = 그로스 − 핸디<br>`
       + `<span class="muted">${esc(P.HOLE_CAPS[s.holeCap].label)} · ${esc(P.ROUNDING[s.rounding].label)} · 상한 ${s.maxHandicap ?? '없음'}${s.maxHandicapF != null ? ` (여 ${s.maxHandicapF})` : ''} · 동점 ${esc(P.TIE_BREAKS[s.tieBreak])} → ${esc(P.TIE_BREAKS[s.tieBreak2])}</span>`;
@@ -599,11 +926,22 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   $('courseGrid').addEventListener('change', (e) => {
     const h = e.target.dataset.par;
     if (h == null) return;
-    setState({ pars: state.pars.map((p, i) => (i === Number(h) ? Number(e.target.value) : p)), drawCode: null, drawMethod: null });
+    const v = Number(e.target.value);
+    if (![3, 4, 5, 6].includes(v)) return;
+    rememberDraw();
+    setState({ pars: state.pars.map((p, i) => (i === Number(h) ? v : p)), drawCode: null, drawMethod: null });
     renderCourse();
   });
   function toggleHole(el) {
-    if (state.hideHidden) return;
+    if (!canEditCourse()) {
+      $('hideMsg').textContent = '온라인 방에서는 숨김홀을 방장만 바꿀 수 있습니다.';
+      return;
+    }
+    if (state.hideHidden) {
+      $('hideMsg').textContent = '숨김홀을 가린 동안에는 바꿀 수 없습니다. "라운드 중 숨김홀 가리기"를 끄면 바꿀 수 있습니다.';
+      return;
+    }
+    rememberDraw();
     const h = Number(el.dataset.toggle);
     const hidden = state.hidden.includes(h) ? state.hidden.filter((x) => x !== h) : [...state.hidden, h].sort((a, b) => a - b);
     setState({ hidden, drawCode: null, drawMethod: null });
@@ -611,6 +949,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   }
   function applyDraw(code, count) {
     const d = P.drawFromCode(code, state.pars, count);
+    prevDraw = null;
     setState({ hidden: d.holes, drawCode: d.code, drawMethod: d.method });
     renderCourse();
     return d;
@@ -630,14 +969,29 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     const code = $('codeInput').value.trim().toUpperCase();
     const msg = $('codeMsg');
     if (!/^[A-Z0-9]{6}$/.test(code)) { msg.className = 'msg err'; msg.textContent = '영문·숫자 6자리 코드를 넣으세요.'; return; }
+    if (!canEditCourse()) {
+      // 참가자 폰: 방의 숨김홀을 바꾸지 않고 검증만 한다
+      const count = state.hiddenCount || state.hidden.length || 12;
+      const d = P.drawFromCode(code, state.pars, count);
+      const match = state.hidden.length ? d.holes.join() === state.hidden.join() : null;
+      msg.className = match === false ? 'msg err' : 'msg ok';
+      msg.dataset.code = code;
+      msg.innerHTML = `코드 ${esc(code)}로 나오는 숨김홀: ${d.holes.map((h) => h + 1).join(', ')}번 홀. `
+        + (match === null ? '방장이 아직 숨김홀을 공개하지 않았습니다.' : match ? '방의 숨김홀과 같습니다. 검증되었습니다.' : '방의 숨김홀과 다릅니다!')
+        + `<br>이 코드의 봉인값: <b data-seal>${esc(sealText(code))}</b>${state.seal ? ` · 방장이 미리 올린 봉인값: <b>${esc(state.seal)}</b>` : ''}`;
+      return;
+    }
     if (state.hideHidden) { msg.className = 'msg err'; msg.textContent = '숨김홀 가리기를 끄고 다시 시도하세요.'; return; }
     const count = state.hidden.length === 6 ? 6 : 12;
     const before = state.hidden.join();
+    rememberDraw();
     const d = applyDraw(code, count);
     msg.className = 'msg ok';
-    msg.textContent = before === d.holes.join()
-      ? `코드 ${code}로 뽑은 숨김홀이 지금 숨김홀과 같습니다. 검증되었습니다.`
-      : `코드 ${code}로 ${count}홀을 뽑았습니다: ${d.holes.map((h) => h + 1).join(', ')}번 홀`;
+    msg.dataset.code = code;
+    msg.innerHTML = (before === d.holes.join()
+      ? `코드 ${esc(code)}로 뽑은 숨김홀이 지금 숨김홀과 같습니다. 검증되었습니다.`
+      : `코드 ${esc(code)}로 ${count}홀을 뽑았습니다: ${d.holes.map((h) => h + 1).join(', ')}번 홀`)
+      + `<br>이 코드의 봉인값: <b data-seal>${esc(sealText(code))}</b> (라운드 전에 받은 봉인값과 같아야 합니다)`;
   });
   const pick = (map, v, fallback) => (map[v] ? v : fallback);
   $('formulaSel').addEventListener('change', (e) => updateSetting('formula', pick(P.FORMULAS, e.target.value, 'coursePar')));
@@ -653,18 +1007,19 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     renderRoster();
   });
   $('splitByGender').addEventListener('change', (e) => { updateSetting('splitByGender', e.target.checked); renderRoster(); });
-  $('clearHidden').addEventListener('click', () => { setState({ hidden: [], drawCode: null, drawMethod: null }); renderCourse(); });
-  $('hideHidden').addEventListener('change', (e) => { setState({ hideHidden: e.target.checked }); renderCourse(); });
+  $('clearHidden').addEventListener('click', () => { rememberDraw(); setState({ hidden: [], drawCode: null, drawMethod: null }); renderCourse(); });
+  $('hideHidden').addEventListener('change', (e) => { setState({ hideHidden: e.target.checked }); $('hideMsg').textContent = ''; renderCourse(); });
 
   function updateSetting(key, value) { setState({ settings: { ...state.settings, [key]: value } }); renderFormula(); }
   $('coefficient').addEventListener('change', (e) => {
     const v = Number(e.target.value);
-    updateSetting('coefficient', v > 0 && v <= 1 ? v : P.DEFAULT_SETTINGS.coefficient);
+    // 잘못된 값이면 이전 값을 유지하고 칸을 되돌린다 (조용히 기본값으로 바꾸지 않음)
+    updateSetting('coefficient', v >= 0.1 && v <= 1 ? v : state.settings.coefficient);
   });
   $('maxHandicap').addEventListener('change', (e) => {
     const raw = e.target.value.trim();
     const v = Number(raw);
-    updateSetting('maxHandicap', raw === '' ? null : Number.isFinite(v) && v >= 0 ? v : P.DEFAULT_SETTINGS.maxHandicap);
+    updateSetting('maxHandicap', raw === '' ? null : Number.isFinite(v) && v >= 0 && v <= 108 ? v : state.settings.maxHandicap);
   });
   ['minZero', 'excludeMedalist'].forEach((k) => $(k).addEventListener('change', (e) => updateSetting(k, e.target.checked)));
 
@@ -677,28 +1032,33 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     const s = state.settings;
     const withAge = s.tieBreak === 'age' || s.tieBreak2 === 'age';
     const withGender = s.splitByGender || s.maxHandicapF != null;
-    const wide = withAge || withGender;
+    const withGroup = !!room || state.players.some((p) => p.group);
+    const wide = withAge || withGender || withGroup;
     $('roster').innerHTML = state.players.length
       ? state.players.map((p, i) => `<div class="roster-item${wide ? ' wide' : ''}">
           <span class="idx">${i + 1}</span>
           <input type="text" id="n-${p.id}" data-rename="${p.id}" value="${esc(p.name)}" placeholder="선수 ${i + 1}" maxlength="30" aria-label="선수 ${i + 1} 이름">
-          <button type="button" class="${pendingDelete === p.id ? 'danger' : 'ghost danger'}" data-remove="${p.id}">${pendingDelete === p.id ? '정말 삭제' : '삭제'}</button>
+          <button type="button" class="${pendingDelete === p.id ? 'danger' : 'ghost danger'}" data-remove="${p.id}" aria-label="${esc(playerLabel(p, i))} ${pendingDelete === p.id ? '정말 삭제' : '삭제'}">${pendingDelete === p.id ? '정말 삭제' : '삭제'}</button>
           ${wide ? `<span class="extra">
+            ${withGroup ? `<select id="gr-${p.id}" data-group="${p.id}" aria-label="선수 ${i + 1} 조">
+              <option value="">조</option>${Array.from({ length: 12 }, (_, k) => `<option value="${k + 1}"${p.group === k + 1 ? ' selected' : ''}>${k + 1}조</option>`).join('')}</select>` : ''}
             ${withGender ? `<select id="g-${p.id}" data-gender="${p.id}" aria-label="선수 ${i + 1} 성별">
               <option value=""${!p.gender ? ' selected' : ''}>성별</option><option value="M"${p.gender === 'M' ? ' selected' : ''}>남</option><option value="F"${p.gender === 'F' ? ' selected' : ''}>여</option></select>` : ''}
             ${withAge ? `<input type="text" inputmode="numeric" maxlength="4" id="y-${p.id}" data-birth="${p.id}" value="${p.birthYear ?? ''}" placeholder="출생연도" aria-label="선수 ${i + 1} 출생연도">` : ''}
           </span>` : ''}
         </div>`).join('')
+        + (withAge ? `<p class="help">출생연도는 네트 타수가 같을 때 연장자를 앞 순위로 정하는 데만 씁니다. 몰라도 비워 두면 됩니다.</p>` : '')
       : `<p class="help">아직 선수가 없습니다. 아래에 이름을 넣고 추가하세요.</p>`;
   }
   $('roster').addEventListener('input', (e) => {
     const bid = e.target.dataset.birth;
     if (bid) {
-      const y = Number(e.target.value);
-      const ok = e.target.value === '' || (Number.isInteger(y) && y >= 1900 && y <= 2030);
-      if (e.target.value.length === 4 || e.target.value === '') {
-        setState({ players: state.players.map((p) => (p.id === bid ? { ...p, birthYear: ok && e.target.value !== '' ? y : null } : p)) });
-      }
+      // 입력 중에도 상태와 화면이 같도록 매번 저장한다. 4자리가 아니거나 범위 밖이면 빨간 테두리로 알린다.
+      const raw = e.target.value.trim();
+      const y = Number(raw);
+      const ok = raw === '' || (/^\d{4}$/.test(raw) && y >= 1900 && y <= 2030);
+      e.target.classList.toggle('bad', !ok);
+      setState({ players: state.players.map((p) => (p.id === bid ? { ...p, birthYear: ok && raw !== '' ? y : null } : p)) });
       return;
     }
     const id = e.target.dataset.rename;
@@ -707,6 +1067,13 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     leaveSample();
   });
   $('roster').addEventListener('change', (e) => {
+    const grp = e.target.dataset.group;
+    if (grp) {
+      const g = Number(e.target.value);
+      setState({ players: state.players.map((p) => (p.id === grp ? { ...p, group: Number.isInteger(g) && g >= 1 && g <= 30 ? g : null } : p)) });
+      renderScoreArea();
+      return;
+    }
     const gid = e.target.dataset.gender;
     if (gid) {
       const g = ['M', 'F'].includes(e.target.value) ? e.target.value : '';
@@ -720,24 +1087,62 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     if (!b) return;
     const id = b.dataset.remove;
     if (pendingDelete !== id) {
+      // 다른 버튼이 확인 대기 중이면 원래대로 돌린다. 다시 그리지 않고 버튼만 바꿔 입력 중인 칸의 포커스를 지킨다.
+      document.querySelectorAll('#roster [data-remove]').forEach((x) => { x.className = 'ghost danger'; x.textContent = '삭제'; });
       pendingDelete = id;
-      renderRoster();
-      setTimeout(() => { if (pendingDelete === id) { pendingDelete = null; renderRoster(); } }, 3000);
+      b.className = 'danger';
+      b.textContent = '정말 삭제';
+      setTimeout(() => {
+        if (pendingDelete !== id) return;
+        pendingDelete = null;
+        const btn = document.querySelector(`#roster [data-remove="${id}"]`);
+        if (btn) { btn.className = 'ghost danger'; btn.textContent = '삭제'; }
+      }, 3000);
       return;
     }
     pendingDelete = null;
+    const removed = state.players.find((p) => p.id === id);
     setState({ players: state.players.filter((p) => p.id !== id) });
-    leaveSample();
+    renderScores();
+    const msg = $('rosterMsg');
+    msg.className = 'msg';
+    msg.innerHTML = `${esc(withJosa(removed && removed.name ? removed.name : '선수', '을', '를'))} 지웠습니다. <button type="button" class="ghost" id="undoRemove">되돌리기</button>`;
+    lastRemoved = removed ? { player: removed, index: state.players.length } : null;
+  });
+  let lastRemoved = null;
+  document.addEventListener('click', (e) => {
+    if (e.target.id !== 'undoRemove' || !lastRemoved) return;
+    const players = [...state.players];
+    players.splice(Math.min(lastRemoved.index, players.length), 0, lastRemoved.player);
+    setState({ players });
+    lastRemoved = null;
+    $('rosterMsg').textContent = '되돌렸습니다.';
     renderScores();
   });
   $('addForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const name = $('newName').value.trim().slice(0, 30);
-    setState({ players: [...state.players, { id: uid(), name, scores: Array(18).fill(null) }] });
-    leaveSample();
+    if (!name) {
+      $('rosterMsg').className = 'msg err';
+      $('rosterMsg').textContent = '이름을 먼저 입력하세요.';
+      $('newName').focus();
+      return;
+    }
+    leaveSample(true);
+    const dup = state.players.some((p) => p.name === name);
+    setState({ players: [...state.players, { id: uid(), name, scores: Array(18).fill(null), totals: null, birthYear: null, gender: '', group: state.viewGroup ?? null }] });
     $('newName').value = '';
+    $('rosterMsg').className = dup ? 'msg err' : 'msg ok';
+    $('rosterMsg').innerHTML = (dup ? `같은 이름(${esc(name)})이 이미 있습니다. 구분할 수 있게 바꿔 주세요.` : `${esc(name)} 추가 · 모두 ${state.players.length}명`)
+      + (state.players.length >= 2 ? ` <button type="button" class="soft" id="startRecord">명단 접고 기록 시작</button>` : '');
     renderScores();
     $('newName').focus();
+  });
+  document.addEventListener('click', (e) => {
+    if (e.target.id !== 'startRecord') return;
+    $('rosterBox').open = false;
+    $('rosterMsg').textContent = '';
+    $('viewSeg').scrollIntoView({ block: 'start', behavior: 'smooth' });
   });
 
   // ---------- 2. 스코어: 공통 ----------
@@ -757,7 +1162,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     renderScoreArea();
   }
   function renderScoreArea() {
-    document.querySelectorAll('.seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === state.view)));
+    document.querySelectorAll('#viewSeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === state.view)));
     $('holeView').hidden = state.view !== 'hole';
     $('tableView').hidden = state.view !== 'table';
     $('totalView').hidden = state.view !== 'total';
@@ -781,7 +1186,8 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
         ${state.players.map((p, i) => `<div class="total-row">
           <span class="p-name">${esc(playerLabel(p, i))}</span>
           <input type="text" inputmode="numeric" maxlength="3" id="tg-${p.id}" data-tot="gross" data-pid="${p.id}" value="${t(p).gross ?? ''}" aria-label="${esc(playerLabel(p, i))} 그로스">
-          <input type="text" inputmode="numeric" maxlength="3" id="th-${p.id}" data-tot="hiddenSum" data-pid="${p.id}" value="${t(p).hiddenSum ?? ''}" aria-label="${esc(playerLabel(p, i))} 숨김홀 합">
+          <input type="text" inputmode="numeric" maxlength="3" id="th-${p.id}" data-tot="hiddenSum" data-pid="${p.id}" value="${t(p).hiddenSum ?? ''}" aria-label="${esc(playerLabel(p, i))} 숨김홀 합" aria-describedby="te-${p.id}">
+          <span class="total-err" id="te-${p.id}" role="status">${esc(totalError(p))}</span>
         </div>`).join('')}
       </div>
     </div>`;
@@ -803,8 +1209,19 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       })
     });
     leaveSample();
+    const p = state.players.find((x) => x.id === e.target.dataset.pid);
+    const err = $('te-' + e.target.dataset.pid);
+    if (p && err) err.textContent = totalError(p);
   });
-  document.querySelector('.seg').addEventListener('click', (e) => {
+  /** 합계 입력 칸 바로 아래에 보일 안내 (둘 다 있어야 계산되고, 숨김홀 합은 가능한 범위 안이어야 한다) */
+  function totalError(p) {
+    const t = p.totals;
+    if (!t || (t.gross == null && t.hiddenSum == null)) return '';
+    if (t.gross == null || t.hiddenSum == null) return t.gross == null ? '그로스도 넣어야 계산됩니다.' : '숨김홀 합도 넣어야 계산됩니다.';
+    const r = P.computePlayer({ ...p, scores: [] }, state.pars, state.hidden, state.settings);
+    return r.error || '';
+  }
+  $('viewSeg').addEventListener('click', (e) => {
     const b = e.target.closest('[data-view]');
     if (!b) return;
     setState({ view: b.dataset.view });
@@ -812,7 +1229,29 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   });
 
   // ---------- 2. 스코어: 홀별 입력 ----------
-  function holeDone(h) { return state.players.length > 0 && state.players.every((p) => P.isScore(p.scores[h])); }
+  // 합계만 입력한 선수는 홀별 기록 대상이 아니다
+  const usesTotals = (p) => !!(p.totals && (p.totals.gross != null || p.totals.hiddenSum != null));
+  // "내 조만 보기": 이 폰에서만 쓰는 보기 설정 (서버에 올리지 않음)
+  const inView = (p) => !state.viewGroup || p.group === state.viewGroup;
+  function groupBar() {
+    const groups = [...new Set(state.players.map((p) => p.group).filter(Boolean))].sort((a, b) => a - b);
+    if (!groups.length) return '';
+    const items = [{ k: '', label: '전체' }, ...groups.map((g) => ({ k: String(g), label: `${g}조` }))];
+    return `<div class="seg" role="group" aria-label="볼 조" style="grid-template-columns:repeat(${Math.min(items.length, 6)},1fr)">${items.map((it) =>
+      `<button type="button" data-viewgroup="${it.k}" aria-pressed="${String(state.viewGroup ?? '') === it.k}">${it.label}</button>`).join('')}</div>`;
+  }
+  function holeDone(h) {
+    const holePlayers = state.players.filter((p) => !usesTotals(p) && inView(p));
+    return holePlayers.length > 0 && holePlayers.every((p) => P.isScore(p.scores[h]));
+  }
+  /** 다시 그린 뒤 같은 버튼에 포커스를 돌려준다 (키보드·스크린리더 사용자가 처음부터 다시 찾지 않게) */
+  function withFocus(container, render) {
+    const a = document.activeElement;
+    const key = a && container.contains(a) && a.id ? a.id : null;
+    render();
+    if (key && $(key)) $(key).focus();
+  }
+  let pendingUnlock = null;
   function renderHoleView() {
     if (!state.players.length) {
       $('holeView').innerHTML = `<p class="empty">위 선수 명단에 이름을 추가하면 여기서 홀마다 타수를 기록합니다.</p>`;
@@ -827,6 +1266,17 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       return `<button type="button" class="${cls}" data-hole="${i}" aria-label="${i + 1}번 홀${holeDone(i) ? ' 완료' : ''}">${i + 1}</button>`;
     }).join('');
     const rows = state.players.map((p, i) => {
+      if (!inView(p)) return '';
+      if (usesTotals(p)) {
+        const t = p.totals;
+        return `<div class="p-row">
+          <div>
+            <div class="p-name">${esc(playerLabel(p, i))}</div>
+            <div class="p-sum">합계 입력 중 · 그로스 ${t.gross ?? '–'} · 숨김홀 합 ${t.hiddenSum ?? '–'}</div>
+          </div>
+          <button type="button" id="ul-${p.id}" class="${pendingUnlock === p.id ? 'danger' : 'ghost'}" data-unlock="${p.id}">${pendingUnlock === p.id ? '합계 지우기' : '홀별로 기록'}</button>
+        </div>`;
+      }
       const v = p.scores[h];
       const has = P.isScore(v);
       const tone = !has ? 'empty' : v < par ? 'under' : v > par ? 'over' : '';
@@ -838,60 +1288,83 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
           <div class="p-sum">${filled.length ? `${filled.length}홀 · ${sumOf(filled)}타 (${toPar > 0 ? '+' : ''}${toPar})` : '기록 없음'}</div>
         </div>
         <div class="stepper">
-          <button type="button" data-step="-1" data-pid="${p.id}" aria-label="${esc(playerLabel(p, i))} 한 타 줄이기">−</button>
-          <div class="val ${tone}" data-setpar="${p.id}" role="button" tabindex="0" aria-label="${esc(playerLabel(p, i))} ${has ? v + '타' : '미입력, 누르면 파'}">
+          <button type="button" id="sm-${p.id}" data-step="-1" data-pid="${p.id}" aria-label="${esc(playerLabel(p, i))} 한 타 줄이기">−</button>
+          <div class="val ${tone}" id="sv-${p.id}" data-setpar="${p.id}" role="button" tabindex="0" aria-label="${esc(playerLabel(p, i))} ${has ? v + '타 ' + scoreWord(v, par) : '미입력, 누르면 파'}">
             <b>${has ? v : '–'}</b><span>${has ? scoreWord(v, par) : '누르면 파'}</span>
           </div>
-          <button type="button" data-step="1" data-pid="${p.id}" aria-label="${esc(playerLabel(p, i))} 한 타 늘리기">+</button>
+          <button type="button" id="sp-${p.id}" data-step="1" data-pid="${p.id}" aria-label="${esc(playerLabel(p, i))} 한 타 늘리기">+</button>
         </div>
       </div>`;
     }).join('');
-    const missing = state.players.filter((p) => !P.isScore(p.scores[h])).length;
+    const missing = state.players.filter((p) => inView(p) && !usesTotals(p) && !P.isScore(p.scores[h])).length;
     $('holeView').innerHTML = `<div style="display:grid;gap:14px">
+      ${groupBar()}
       <div style="display:grid;gap:5px"><div class="strip">${strip(0)}</div><div class="strip">${strip(9)}</div></div>
       <div class="hole-head">
         <span class="big">${h + 1}</span><span>번 홀</span><span class="par">파 ${par}</span>
         ${showHidden(h) ? '<span class="badge">숨김홀</span>' : ''}
       </div>
       <div class="players">${rows}</div>
-      ${missing ? `<button type="button" class="soft" data-fillpar="1">남은 ${missing}명 모두 파로 채우기</button>` : ''}
+      ${missing ? `<button type="button" class="soft" id="fillPar" data-fillpar="1">아직 안 적은 ${missing}명 모두 파(${par})로 채우기</button>` : ''}
       <div class="hole-nav">
-        <button type="button" data-move="-1" ${h === 0 ? 'disabled' : ''}>← 이전</button>
+        <button type="button" id="movePrev" data-move="-1" ${h === 0 ? 'disabled' : ''}>← 이전</button>
         ${h === 17
-          ? `<button type="button" class="primary" data-go="results">결과 보기</button>`
-          : `<button type="button" class="primary" data-move="1">다음 홀 (${h + 2}번) →</button>`}
+          ? `<button type="button" class="primary" id="toResults" data-go="results">결과 보기</button>`
+          : `<button type="button" class="primary" id="moveNext" data-move="1">다음 홀 (${h + 2}번) →</button>`}
       </div>
     </div>`;
   }
   $('holeView').addEventListener('click', (e) => {
     const h = state.currentHole, par = state.pars[h];
+    const redraw = () => withFocus($('holeView'), renderHoleView);
+    const vg = e.target.closest('[data-viewgroup]');
+    if (vg) { setState({ viewGroup: vg.dataset.viewgroup ? Number(vg.dataset.viewgroup) : null }); renderHoleView(); return; }
     const hole = e.target.closest('[data-hole]');
     if (hole) { setState({ currentHole: Number(hole.dataset.hole) }); renderHoleView(); return; }
     const mv = e.target.closest('[data-move]');
     if (mv) {
       setState({ currentHole: Math.min(17, Math.max(0, h + Number(mv.dataset.move))) });
-      renderHoleView();
+      redraw();
       $('holeView').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      return;
+    }
+    const ul = e.target.closest('[data-unlock]');
+    if (ul) {
+      const id = ul.dataset.unlock;
+      if (pendingUnlock !== id) {
+        pendingUnlock = id;
+        redraw();
+        // 3초 안에 다시 누르지 않으면 확인 상태를 푼다 (나중에 한 번 잘못 눌러 지워지지 않게)
+        setTimeout(() => { if (pendingUnlock === id) { pendingUnlock = null; if (state.view === 'hole') withFocus($('holeView'), renderHoleView); } }, 3000);
+        return;
+      }
+      pendingUnlock = null;
+      setState({ players: state.players.map((p) => (p.id === id ? { ...p, totals: null } : p)) });
+      redraw();
       return;
     }
     const st = e.target.closest('[data-step]');
     if (st) {
       const p = state.players.find((x) => x.id === st.dataset.pid);
+      if (!p) return;
       const cur = p.scores[h];
-      const next = P.isScore(cur) ? cur + Number(st.dataset.step) : par + Number(st.dataset.step);
-      if (P.isScore(next)) { setScore(p.id, h, next); renderHoleView(); }
+      // 빈 칸에서 + 는 파, − 는 버디부터 시작한다
+      const next = P.isScore(cur) ? cur + Number(st.dataset.step) : Number(st.dataset.step) > 0 ? par : par - 1;
+      if (P.isScore(next)) { setScore(p.id, h, next); redraw(); }
+      else if (cur === 1 && next === 0) { setScore(p.id, h, null); redraw(); } // 1타에서 −를 한 번 더 누르면 기록을 지운다
       return;
     }
     const sp = e.target.closest('[data-setpar]');
     if (sp) {
       const p = state.players.find((x) => x.id === sp.dataset.setpar);
-      if (!P.isScore(p.scores[h])) { setScore(p.id, h, par); renderHoleView(); }
+      if (p && !P.isScore(p.scores[h])) { setScore(p.id, h, par); redraw(); }
       return;
     }
     if (e.target.closest('[data-fillpar]')) {
-      setState({ players: state.players.map((p) => (P.isScore(p.scores[h]) ? p : { ...p, totals: null, scores: p.scores.map((v, i) => (i === h ? par : v)) })) });
+      setState({ players: state.players.map((p) => (!inView(p) || usesTotals(p) || P.isScore(p.scores[h]) ? p : { ...p, scores: p.scores.map((v, i) => (i === h ? par : v)) })) });
       leaveSample();
       renderHoleView();
+      if ($('moveNext')) $('moveNext').focus({ preventScroll: true });
     }
   });
   $('holeView').addEventListener('keydown', (e) => {
@@ -920,6 +1393,10 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       <tr class="par-row"><th class="name-col">파</th>${parHead(0)}<th>${outPar}</th>${parHead(9)}<th>${inPar}</th><th>${outPar + inPar}</th></tr>
     </thead>`;
     const rows = state.players.map((p, r) => {
+      if (usesTotals(p)) {
+        return `<tr><td class="name-col">${esc(playerLabel(p, r))}</td>
+          <td colspan="21" class="help" style="text-align:left">합계 입력 중 (그로스 ${p.totals.gross ?? '–'}) · 홀별로 바꾸려면 홀별 화면의 "홀별로 기록"을 누르세요</td></tr>`;
+      }
       const cell = (h) => {
         const v = p.scores[h];
         return `<td${hcls(h)}><input type="text" inputmode="numeric" maxlength="2" autocomplete="off"
@@ -941,6 +1418,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     const n = Number(raw);
     const ok = raw === '' || (/^\d+$/.test(raw) && P.isScore(n));
     t.classList.toggle('bad', !ok);
+    $('tableMsg').textContent = ok ? '' : `${h + 1}번 홀: 1~30 사이 숫자만 넣을 수 있습니다. 칸을 벗어나면 이전 값으로 돌아갑니다.`;
     if (!ok) return;
     const value = raw === '' ? null : n;
     setScore(state.players[r].id, h, value);
@@ -952,6 +1430,32 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     tr.querySelector('[data-sum="in"]').textContent = tot.inn;
     tr.querySelector('[data-sum="tot"]').textContent = tot.tot;
   });
+  // 잘못된 값을 둔 채 칸을 떠나면 저장된 값으로 되돌린다 (화면과 저장값이 어긋나지 않게)
+  // 칸에 들어올 때의 값을 기억해 둔다. 99 처럼 첫 글자(9)만 저장된 뒤 잘못된 값이 되면 들어올 때 값으로 돌린다.
+  $('scoreTable').addEventListener('focusin', (e) => {
+    if (e.target.dataset.hole != null) e.target.dataset.orig = e.target.value;
+  });
+  $('scoreTable').addEventListener('focusout', (e) => {
+    const t = e.target;
+    if (t.dataset.hole == null || !t.classList.contains('bad')) return;
+    const p = state.players[Number(t.dataset.row)];
+    const h = Number(t.dataset.hole);
+    const orig = t.dataset.orig ?? '';
+    const v = orig === '' ? null : Number(orig);
+    if (p && (P.isScore(v) || v === null) && p.scores[h] !== v) setScore(p.id, h, v);
+    t.value = orig;
+    t.classList.remove('bad');
+    t.classList.remove('under', 'over2');
+    const cls = scoreClass(v, state.pars[h]);
+    if (cls) t.classList.add(cls);
+    if (p) {
+      const tot = rowTotals(state.players[Number(t.dataset.row)].scores), tr = t.closest('tr');
+      tr.querySelector('[data-sum="out"]').textContent = tot.out;
+      tr.querySelector('[data-sum="in"]').textContent = tot.inn;
+      tr.querySelector('[data-sum="tot"]').textContent = tot.tot;
+    }
+    $('tableMsg').textContent = '';
+  });
   $('scoreTable').addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || e.target.dataset.hole == null) return;
     e.preventDefault();
@@ -960,21 +1464,27 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     if (next) { next.focus(); next.select(); }
   });
   function applyPaste(replace) {
-    const { rows, errors } = P.parsePasted($('pasteBox').value, state.pars, $('pasteRelative').checked);
+    const { rows, errors, failedLines, skipped } = P.parsePasted($('pasteBox').value, state.pars, $('pasteRelative').checked);
     const msg = $('pasteMsg');
     if (!rows.length) {
       msg.className = 'msg err';
-      msg.textContent = errors.length ? errors.join(' ') : '붙여넣은 내용이 없습니다.';
+      msg.textContent = errors.length ? errors.join(' ') : skipped ? '머리글 줄만 있습니다. 선수 줄을 넣으세요.' : '붙여넣은 내용이 없습니다.';
       return;
     }
-    const added = rows.map((r) => ({ id: uid(), name: r.name.slice(0, 30), scores: r.scores }));
+    leaveSample(true);
+    const added = rows.map((r) => ({ id: uid(), name: r.name.slice(0, 30), scores: r.scores, totals: null, birthYear: null, gender: '' }));
     const base = replace ? [] : state.players;
+    const names = new Set(base.map((p) => p.name));
+    const dups = added.filter((p) => names.has(p.name) || added.filter((q) => q.name === p.name).length > 1).map((p) => p.name);
     setState({ players: [...base, ...added] });
-    leaveSample();
+    // 성공한 줄은 지우고 실패한 줄만 남겨, 고쳐서 다시 눌러도 중복으로 들어가지 않게 한다
+    $('pasteBox').value = failedLines.join('\n');
     renderScores();
-    msg.className = errors.length ? 'msg err' : 'msg ok';
-    msg.textContent = `${added.length}명을 넣었습니다.` + (errors.length ? ' 건너뛴 줄: ' + errors.join(' ') : '');
-    if (!errors.length) $('pasteBox').value = '';
+    msg.className = errors.length || dups.length ? 'msg err' : 'msg ok';
+    msg.textContent = `${added.length}명을 넣었습니다.`
+      + (skipped ? ` 머리글 ${skipped}줄은 건너뛰었습니다.` : '')
+      + (errors.length ? ` 넣지 못한 ${errors.length}줄은 상자에 남겨 두었습니다. 고친 뒤 다시 누르세요. (줄 번호는 처음 붙여넣은 내용 기준) ${errors.join(' ')}` : '')
+      + (dups.length ? ` 같은 이름이 있습니다(${[...new Set(dups)].join(', ')}). 구분할 수 있게 바꿔 주세요.` : '');
   }
   $('pasteAppend').addEventListener('click', () => applyPaste(false));
   $('pasteReplace').addEventListener('click', () => applyPaste(true));
@@ -983,22 +1493,29 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   let lastResult = null;
   let groupKey = 'all';
   let ceremony = null; // { list, step }
-  const m3 = (x) => fmt(Math.round(x * 1000) / 1000);
+  // 배수는 18/11 = 1.636 처럼 소수 셋째 자리까지 보여야 계산을 따라갈 수 있다 (fmt 는 한 자리로 자름)
+  const m3 = (x) => String(Math.round(x * 1000) / 1000);
+  let lastSig = null;
+  const resultSig = (res) => JSON.stringify([res.ranked.map((r) => [r.id, r.rank, r.net, r.name]), res.medalistId, state.hidden]);
+  function setCeremonyMode(on) { $('panel-results').classList.toggle('in-ceremony', !!on); }
 
   function computeAll() {
     return P.rankPlayers(state.players.map((p, i) => ({ ...p, name: playerLabel(p, i) })), state.pars, state.hidden, state.settings);
   }
   function lockedOrInvalid() {
-    const errs = P.validateCourse(state.pars, state.hidden);
-    if (errs.length) return `<li class="card empty">${esc(errs.join(' '))} <a href="#course">코스 화면으로</a></li>`;
+    // 가린 상태를 먼저 본다: 온라인 방 참가자는 공개 전까지 숨김홀을 받지 않아 코스 검사가 실패하기 때문
     if (state.hideHidden) {
       // 가린 상태에서 핸디·숨김 합을 보이면 숨김홀을 거꾸로 짐작할 수 있다
       return `<li class="card lock">
         <b>숨김홀이 가려져 있어 결과를 잠가 두었습니다</b>
-        <p class="help">핸디와 숨김홀 합계가 보이면 어느 홀이 숨김홀인지 짐작할 수 있습니다. 라운드가 끝나면 공개하세요.</p>
-        <button type="button" class="primary" id="revealBtn">숨김홀 공개하고 결과 보기</button>
+        <p class="help">핸디와 숨김홀 합계가 보이면 어느 홀이 숨김홀인지 짐작할 수 있습니다.${canEditCourse() ? ' 라운드가 끝나면 공개하세요.' : ''}</p>
+        ${canEditCourse()
+          ? '<button type="button" class="primary" id="revealBtn">숨김홀 공개하고 결과 보기</button>'
+          : '<p class="help"><b>방장이 공개하면 이 화면에 결과가 바로 나타납니다.</b></p>'}
       </li>`;
     }
+    const errs = P.validateCourse(state.pars, state.hidden);
+    if (errs.length) return `<li class="card empty">${esc(errs.join(' '))} <a href="#course">코스 화면으로</a></li>`;
     return null;
   }
   function calcLine(r) {
@@ -1048,12 +1565,16 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       ...list.map((a) => ({ title: a.title, names: a.winners.map((w) => w.name).join(', '), detail: a.detail })),
       ...manual
     ];
-    $('awardsList').innerHTML = rows.length
+    const boobyNote = res && state.awardOpts.booby && !list.some((a) => a.key === 'booby')
+      ? `<p class="help">부비상: 뒤에서 2등이 3위 안이거나 순위가 난 선수가 4명보다 적어 이번에는 없습니다.</p>` : '';
+    $('awardsList').innerHTML = (rows.length
       ? rows.map((a) => `<div class="award"><span class="t">${esc(a.title)}</span><span>${esc(a.names)} <span class="d">${esc(a.detail)}</span></span></div>`).join('')
-      : `<p class="help">결과가 나오면 자동으로 채워집니다.</p>`;
+      : `<p class="help">결과가 나오면 자동으로 채워집니다.</p>`) + boobyNote;
     $('optBooby').checked = !!state.awardOpts.booby;
     $('optMostPars').checked = !!state.awardOpts.mostPars;
+    const keepHole = $('maHole').value;
     $('maHole').innerHTML = `<option value="">홀</option>` + Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}">${i + 1}번${state.pars[i] === 3 ? ' (파3)' : state.pars[i] === 5 ? ' (파5)' : ''}</option>`).join('');
+    $('maHole').value = keepHole;
     $('manualAwards').innerHTML = state.manualAwards.map((m) => `<div class="roster-item" style="grid-template-columns:1fr auto">
       <span>${esc(m.type)}${m.hole ? ` · ${m.hole}번 홀` : ''} · <b>${esc(m.name || '–')}</b></span>
       <button type="button" class="ghost danger" data-del-award="${m.id}">삭제</button></div>`).join('');
@@ -1070,12 +1591,27 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       $('rankList').innerHTML = blocked;
       $('awardsCard').hidden = true;
       $('ceremony').hidden = true;
+      ceremony = null;
+      setCeremonyMode(false);
       lastResult = null;
+      if (lastSig !== 'blocked') { $('copyMsg').textContent = ''; $('copyFallback').hidden = true; }
+      lastSig = 'blocked';
       return;
     }
     $('awardsCard').hidden = false;
     const res = computeAll();
     lastResult = res;
+    const sig = resultSig(res);
+    if (sig !== lastSig) {
+      // 결과가 바뀌면 옛 결과로 만든 복사 안내와 진행 중이던 시상식을 버린다
+      if (lastSig !== null) { $('copyMsg').textContent = ''; $('copyFallback').hidden = true; }
+      if (ceremony && ceremony.sig !== sig) {
+        ceremony = null;
+        $('resultMsg').className = 'msg err';
+        $('resultMsg').textContent = '스코어가 바뀌어 시상식을 멈췄습니다. 시상식 모드를 다시 누르세요.';
+      }
+      lastSig = sig;
+    }
     const chk = P.courseCheck(state.pars, state.hidden);
     const s = state.settings;
     const all = [...res.ranked, ...res.excluded];
@@ -1102,7 +1638,11 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
       ? list.map(rankCard).join('')
       : `<li class="card empty">18홀을 모두 기록한 선수가 아직 없습니다. <a href="#scores">스코어 입력으로</a></li>`;
     $('incomplete').innerHTML = res.incomplete.length
-      ? `<p class="help">기록이 덜 끝나 순위에서 빠진 선수: ${res.incomplete.map((r) => `${esc(r.name)} (${r.error ? esc(r.error) : r.mode === 'total' ? '합계 미입력' : r.missing.length + '홀 남음'})`).join(', ')}</p>`
+      ? [
+          ['입력을 확인해야 하는 선수', res.incomplete.filter((r) => r.error), (r) => esc(r.error)],
+          ['기록이 덜 끝나 순위에서 빠진 선수', res.incomplete.filter((r) => !r.error), (r) => (r.mode === 'total' ? '합계 미입력' : r.missing.length + '홀 남음')]
+        ].filter(([, list]) => list.length).map(([label, list, why], k) =>
+          `<p class="${k === 0 && list[0].error ? 'msg err' : 'help'}">${label}: ${list.map((r) => `${esc(r.name)} (${why(r)})`).join(', ')} <a href="#scores">스코어로</a></p>`).join('')
       : '';
     renderAwards(res);
     renderCeremony();
@@ -1111,6 +1651,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   // 시상식 모드: 하위부터 한 명씩, 마지막에 우승자
   function renderCeremony() {
     const box = $('ceremony');
+    setCeremonyMode(!!ceremony);
     if (!ceremony) { box.hidden = true; $('ceremonyBtn').textContent = '시상식 모드'; return; }
     box.hidden = false;
     $('ceremonyBtn').textContent = '시상식 끝내기';
@@ -1123,7 +1664,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     if (step === 0) {
       box.innerHTML = `<span class="help">오늘의 숨김홀</span>
         <div class="big-name" style="font-family:var(--font-num)">${state.hidden.map((h) => h + 1).join(' · ')}</div>
-        <button type="button" class="primary" data-ceremony="next" style="min-height:60px;font-size:1.1rem">${list.length}위부터 발표</button>`;
+        <button type="button" class="primary" data-ceremony="next" style="min-height:60px;font-size:1.1rem">${list[list.length - 1].rank}위부터 발표</button>`;
       return;
     }
     const r = list[list.length - step];
@@ -1138,8 +1679,14 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   }
   $('ceremonyBtn').addEventListener('click', () => {
     if (ceremony) { ceremony = null; renderCeremony(); return; }
-    if (!lastResult || !lastResult.ranked.length) return;
-    ceremony = { list: lastResult.ranked, step: -1 };
+    renderResults();
+    if (!lastResult || !lastResult.ranked.length) {
+      $('resultMsg').className = 'msg err';
+      $('resultMsg').textContent = '순위가 나온 선수가 없어 시상식을 시작할 수 없습니다. 18홀 기록을 먼저 마치세요.';
+      return;
+    }
+    $('resultMsg').textContent = '';
+    ceremony = { list: lastResult.ranked, step: -1, sig: lastSig };
     renderCeremony();
     $('ceremony').scrollIntoView({ block: 'start', behavior: 'smooth' });
   });
@@ -1147,8 +1694,11 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     const b = e.target.closest('[data-ceremony]');
     if (!b || !ceremony) return;
     if (b.dataset.ceremony === 'end') ceremony = null;
-    else ceremony = { ...ceremony, step: ceremony.step + 1 };
+    else ceremony = { ...ceremony, step: Math.min(ceremony.step + 1, ceremony.list.length) };
     renderCeremony();
+    const next = $('ceremony').querySelector('[data-ceremony]');
+    if (next) next.focus({ preventScroll: true });
+    else $('ceremonyBtn').focus({ preventScroll: true });
   });
   $('groupTabs').addEventListener('click', (e) => {
     const b = e.target.closest('[data-group]');
@@ -1182,7 +1732,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     const s = state.settings;
     const head = [state.eventName || '신페리오 결과', state.eventDate].filter(Boolean).join(' ');
     const lines = [`[${head}]`, `숨김홀: ${state.hidden.map((h) => h + 1).join(', ')}${state.drawCode ? ` (추첨 코드 ${state.drawCode})` : ''}`,
-      `규칙: ${P.HOLE_CAPS[s.holeCap].label} · 계수 ${s.coefficient} · 상한 ${s.maxHandicap ?? '없음'} · 동점 ${P.TIE_BREAKS[s.tieBreak]}`, ''];
+      `규칙: ${P.HOLE_CAPS[s.holeCap].label} · 계수 ${s.coefficient} · 상한 ${s.maxHandicap ?? '없음'} · 동점 ${P.TIE_BREAKS[s.tieBreak]} → ${P.TIE_BREAKS[s.tieBreak2]}`, ''];
     const line = (r) => `${r.rank}위 ${r.name}  네트 ${fmt(r.net)} (그로스 ${r.gross} / 핸디 ${fmt(r.handicap)})${r.tie ? ' 동률' : ''}${r.tieReason ? ` [${r.tieReason}]` : ''}`;
     if (res.groups && res.groups.length > 1) {
       res.groups.forEach((g) => { lines.push(`■ ${g.label}`); g.ranked.forEach((r) => lines.push(line(r))); lines.push(''); });
@@ -1199,16 +1749,24 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     }
     return lines.join('\n').trim();
   }
-  function resultCsv(res) {
-    const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+  // 엑셀에 붙여넣으면 탭으로 칸이 나뉜다. =+-@ 로 시작하는 이름은 수식으로 실행되지 않게 ' 를 붙인다.
+  function resultTsv(res) {
+    const q = (v) => {
+      const t = String(v).replace(/[\t\r\n]+/g, ' ');
+      return typeof v === 'string' && /^[=+\-@]/.test(t) ? `'${t}` : t;
+    };
     const head = ['순위', '이름', '성별', ...Array.from({ length: 18 }, (_, i) => `${i + 1}`), 'OUT', 'IN', '그로스', '숨김합', '핸디', '네트', '비고'];
     const byId = Object.fromEntries(state.players.map((p) => [p.id, p]));
+    const unfinished = res.incomplete.map((r) => [
+      '', r.name, r.gender === 'M' ? '남' : r.gender === 'F' ? '여' : '',
+      ...(byId[r.id] ? byId[r.id].scores : Array(18).fill(null)).map((v) => v ?? ''), '', '', '', '', '', '', r.error || '기록 미완'
+    ]);
     const rows = [...res.ranked, ...res.excluded].map((r) => [
       r.rank ?? '', r.name, r.gender === 'M' ? '남' : r.gender === 'F' ? '여' : '',
       ...byId[r.id].scores.map((v) => v ?? ''), r.front ?? '', r.back ?? '', r.gross, r.hiddenSum, fmt(r.handicap), fmt(r.net),
       [r.medalist ? '메달리스트' : '', r.tie ? '동률' : '', r.tieReason ? `동점 ${r.tieReason}` : '', ...r.notes].filter(Boolean).join(' / ')
     ]);
-    return [head, ...rows].map((r) => r.map(q).join(',')).join('\n');
+    return [head, ...rows, ...unfinished].map((r) => r.map(q).join('\t')).join('\n');
   }
   async function copy(text, label) {
     const msg = $('copyMsg'), box = $('copyFallback');
@@ -1228,22 +1786,44 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
   }
   $('rankList').addEventListener('click', (e) => {
     if (e.target.id !== 'revealBtn') return;
+    // 공개는 되돌릴 수 없으니(이미 본 사람이 있음) 한 번 더 확인한다
+    const b = e.target;
+    if (!b.dataset.confirm) {
+      b.dataset.confirm = '1';
+      b.textContent = room ? '정말 공개할까요? 방의 모든 화면에 결과가 열립니다' : '정말 공개할까요? 한 번 더 누르세요';
+      b.className = 'danger';
+      setTimeout(() => { if (b.isConnected && b.dataset.confirm) { delete b.dataset.confirm; b.textContent = '숨김홀 공개하고 결과 보기'; b.className = 'primary'; } }, 12000);
+      return;
+    }
     setState({ hideHidden: false });
     renderResults();
   });
-  $('copyText').addEventListener('click', () => { renderResults(); if (lastResult) copy(resultText(lastResult), '결과를'); });
-  $('copyCsv').addEventListener('click', () => { renderResults(); if (lastResult) copy(resultCsv(lastResult), '엑셀용 표를'); });
+  function copyResult(make, label) {
+    renderResults();
+    if (lastResult) { copy(make(lastResult), label); return; }
+    $('copyMsg').className = 'msg err';
+    $('copyMsg').textContent = state.hideHidden
+      ? (canEditCourse() ? '숨김홀을 공개해야 결과를 복사할 수 있습니다. 위의 "숨김홀 공개하고 결과 보기"를 누르세요.' : '방장이 숨김홀을 공개해야 결과를 복사할 수 있습니다.')
+      : '아직 결과가 없습니다. 코스와 스코어를 먼저 확인하세요.';
+  }
+  $('copyText').addEventListener('click', () => copyResult(resultText, '결과를'));
+  $('copyCsv').addEventListener('click', () => copyResult(resultTsv, '엑셀용 표를'));
 
   // ---------- 공통 ----------
   $('eventName').addEventListener('input', (e) => setState({ eventName: e.target.value.slice(0, 60) }));
   $('eventDate').addEventListener('change', (e) => setState({ eventDate: e.target.value }));
-  $('clearSample').addEventListener('click', () => { state = freshState(false); save(); renderAll(); location.hash = '#course'; });
+  $('clearSample').addEventListener('click', () => {
+    clearSampleData();
+    resetUiState();
+    renderAll();
+    location.replace('#course');
+  });
   $('resetArea').addEventListener('click', (e) => {
     const area = $('resetArea');
     if (e.target.id === 'resetAll') {
       area.innerHTML = '<span>선수·스코어·코스를 모두 지울까요?</span><button type="button" class="danger" id="resetYes">지우기</button><button type="button" id="resetNo">취소</button>';
     } else if (e.target.id === 'resetYes' || e.target.id === 'resetNo') {
-      if (e.target.id === 'resetYes') { state = freshState(false); save(); renderAll(); }
+      if (e.target.id === 'resetYes') { state = freshState(false); save(); resetUiState(); renderAll(); }
       area.innerHTML = '<button type="button" class="ghost danger" id="resetAll">전체 초기화</button>';
     }
   });
@@ -1259,13 +1839,212 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; }
     $('installBtn').hidden = true;
   });
 
+  // ---------- 온라인 방 화면 ----------
+  let roomCardOpen = false;
+  let pendingRoomDelete = false;
+  const roomLink = (id) => `${location.origin}${location.pathname}?room=${id}`;
+  function roomStatusText() {
+    if (!room) return '';
+    if (!navigator.onLine) return '오프라인 · 연결되면 올림';
+    return ({ connecting: '연결 중…', synced: '실시간 연결됨', pending: '보내는 중…', offline: '오프라인 · 연결되면 올림', error: '확인 필요' })[room.status] || '';
+  }
+  function renderRoom() {
+    $('storageNote').textContent = room
+      ? '온라인 방: 같은 방 사람들과 함께 저장됩니다. 방을 나가면 이 기기의 내 기록으로 돌아갑니다.'
+      : '입력 내용은 이 기기에만 저장됩니다.';
+    if (!Sync) return;
+    const pill = $('roomPill');
+    pill.hidden = false;
+    pill.className = room ? (room.status === 'error' || room.status === 'offline' || !navigator.onLine ? 'warn' : 'live') : 'soft';
+    pill.innerHTML = room ? `<span class="dot" aria-hidden="true"></span>방 ${esc(fmtRoom(room.id))}` : '함께 입력';
+    pill.setAttribute('aria-expanded', String(roomCardOpen));
+    pill.setAttribute('aria-label', room ? `온라인 방 ${fmtRoom(room.id)}, ${roomStatusText()}` : '여러 사람이 함께 입력하는 온라인 방');
+    $('roomCard').hidden = !roomCardOpen;
+    if (!roomCardOpen) return;
+    const body = $('roomBody');
+    if (!room) {
+      body.innerHTML = `<h2>여럿이 함께 입력</h2>
+        <p class="help">같은 방에 들어온 폰끼리 선수와 스코어가 실시간으로 합쳐집니다. 조마다 한 사람이 자기 조 스코어를 넣으면 모두의 화면에 순위가 같이 바뀝니다.</p>
+        <button type="button" class="primary" id="roomCreate">지금 라운드로 방 만들기</button>
+        <form class="add-row" id="roomJoinForm">
+          <input type="text" id="roomCodeInput" placeholder="방 코드 10자리" maxlength="11" autocomplete="off" aria-label="방 코드" style="text-transform:uppercase;font-family:var(--font-num)">
+          <button type="submit">들어가기</button>
+        </form>
+        <p class="help">방 내용은 Google Firebase 서버(서울)에 저장됩니다. 라운드가 끝나면 방장이 "방 지우기"로 선수·스코어를 모두 지워 주세요. 방 코드를 아는 사람은 누구나 볼 수 있으니 실명 대신 별명을 써도 됩니다. 출생연도는 동점 처리에 필요할 때만 넣으세요.</p>`;
+      return;
+    }
+    body.innerHTML = `<div class="card-head"><h2>온라인 방</h2><span class="muted">${esc(roomStatusText())}</span></div>
+      <div><span class="help">방 코드</span><div class="room-code">${esc(fmtRoom(room.id))}</div></div>
+      <div class="row">
+        <button type="button" class="primary" id="roomCopy">초대 링크 복사</button>
+        <button type="button" id="roomLeave">방 나가기</button>
+        ${room.isOwner ? `<button type="button" class="${pendingRoomDelete ? 'danger' : 'ghost danger'}" id="roomDelete">${pendingRoomDelete ? '정말 방 지우기' : '방 지우기'}</button>` : ''}
+      </div>
+      <p class="lock-note">${room.isOwner
+        ? '이 폰이 <b>방장</b>입니다. 코스·숨김홀·규칙은 이 폰에서만 바뀝니다. 시상까지 끝나면 위의 <b>방 지우기</b>로 서버의 기록을 지워 주세요. 숨김홀을 가린 동안에는 숨김홀이 서버에 올라가지 않습니다. 라운드가 끝나면 이 폰에서 공개해야 다른 사람들도 결과를 봅니다.'
+        : '코스·숨김홀·규칙은 <b>방장</b>만 바꿀 수 있습니다. 선수 명단의 <b>조</b>를 정해 두면 스코어 화면에서 내 조만 볼 수 있습니다.'}</p>
+      ${room.note ? `<p class="msg err">${esc(room.note)}</p>` : ''}`;
+  }
+  function setRoomMsg(text, kind = '') { $('roomMsg').className = 'msg ' + kind; $('roomMsg').textContent = text; }
+  function roomErrorText(e) {
+    const code = (e && e.code) || '';
+    if (code === 'bad-code' || code === 'not-found') return e.message;
+    if (code.includes('operation-not-allowed') || code.includes('admin-restricted')) return '서버 설정(익명 로그인)이 꺼져 있습니다. 앱 관리자에게 알려 주세요.';
+    if (code.includes('permission')) return '서버가 요청을 거절했습니다.';
+    if (code.includes('network') || code.includes('unavailable') || !navigator.onLine) return '인터넷에 연결되어 있어야 방을 만들거나 들어갈 수 있습니다.';
+    return '방에 연결하지 못했습니다. 잠시 뒤 다시 시도하세요.';
+  }
+  async function connectRoom(id, isOwnerHint) {
+    room = { id, isOwner: !!isOwnerHint, status: 'connecting' };
+    renderRoom();
+    try {
+      const r = await Sync.joinRoom(id, remoteHandlers);
+      if (!room || room.id !== r.id) return;
+      room.isOwner = r.isOwner;
+      // 서버의 방 정보(특히 가림 여부)를 먼저 화면 상태에 넣는다. 이걸 건너뛰면 기본값(가림 꺼짐)이 서버로 올라가 숨김홀이 공개된다.
+      remoteHandlers.onRoom(r.data, null);
+      room.connected = true;
+      if (r.isOwner) {
+        // 방장 폰에만 있는 숨김홀·추첨 코드를 되살린다 (방을 나갔다 다시 들어온 경우)
+        const secret = loadOwnerSecret(id);
+        if (secret && !state.hidden.length) setState({ hidden: secret.hidden, drawCode: secret.drawCode, drawMethod: secret.drawMethod });
+        Sync.updateRoom(roomPayload(state), syncError);
+      }
+      save();
+      renderAll();
+    } catch (e) {
+      if (room && room.id === id) { room.status = 'error'; room.note = roomErrorText(e); }
+      if (e && (e.code === 'not-found' || e.code === 'bad-code')) { leaveRoomLocal(); }
+      setRoomMsg(roomErrorText(e), 'err');
+      renderAll();
+    }
+  }
+  function enterRoomState(id, isOwner, base) {
+    resetUiState();
+    room = { id, isOwner, status: 'connecting' };
+    state = base;
+    save();
+  }
+  function leaveRoomLocal() {
+    if (Sync) Sync.leaveRoom();
+    room = null;
+    try { localStorage.removeItem(ROOM_KEY); } catch (e) { /* 저장소를 못 쓰는 환경: 지울 것도 없음 */ }
+    resetUiState();
+    state = load() || freshState(false);
+  }
+  document.addEventListener('click', async (e) => {
+    const t = e.target.closest('button');
+    if (!t || !Sync) return;
+    if (t.id === 'roomPill') { roomCardOpen = !roomCardOpen; renderRoom(); if (roomCardOpen) $('roomCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    if (t.id === 'roomCreate') {
+      if (!navigator.onLine) { setRoomMsg('인터넷에 연결되어 있어야 방을 만들 수 있습니다.', 'err'); return; }
+      t.disabled = true;
+      setRoomMsg('방을 만드는 중…');
+      try {
+        if (hasSampleData()) clearSampleData();
+        // 방은 항상 숨김홀을 가린 채로 만든다: 숨김홀이 한순간도 서버에 올라가지 않게
+        if (!state.hideHidden) setState({ hideHidden: true });
+        const id = await Sync.createRoom(roomPayload(state), state.players, state.manualAwards);
+        enterRoomState(id, true, { ...state });
+        await connectRoom(id, true);
+        setRoomMsg('방을 만들었습니다. 숨김홀은 가린 상태로 시작합니다. 초대 링크를 단톡방에 보내세요.', 'ok');
+      } catch (err) {
+        setRoomMsg(roomErrorText(err), 'err');
+      } finally {
+        t.disabled = false;
+        renderRoom();
+      }
+      return;
+    }
+    if (t.id === 'roomCopy' && room) {
+      const text = `신페리오 방에 들어오세요: ${roomLink(room.id)} (방 코드 ${fmtRoom(room.id)})`;
+      try { await navigator.clipboard.writeText(text); setRoomMsg('초대 링크를 복사했습니다. 단톡방에 붙여넣으세요.', 'ok'); }
+      catch (err) { setRoomMsg(text); }
+      return;
+    }
+    if (t.id === 'roomLeave' && room) {
+      leaveRoomLocal();
+      setRoomMsg('방에서 나왔습니다. 이 폰에 따로 저장된 내 기록으로 돌아왔습니다. 방 코드로 다시 들어갈 수 있습니다.', 'ok');
+      renderAll();
+      return;
+    }
+    if (t.id === 'roomDelete' && room && room.isOwner) {
+      if (!pendingRoomDelete) { pendingRoomDelete = true; renderRoom(); setTimeout(() => { pendingRoomDelete = false; renderRoom(); }, 4000); return; }
+      pendingRoomDelete = false;
+      const delId = room.id;
+      try { await Sync.deleteRoom(); } catch (err) { setRoomMsg(roomErrorText(err), 'err'); return; }
+      try { localStorage.removeItem(OWNER_SECRET_KEY + delId); } catch (err) { /* 저장소 없음 */ }
+      leaveRoomLocal();
+      setRoomMsg('방을 지웠습니다. 다른 사람들은 더 이상 이 방을 볼 수 없습니다.', 'ok');
+      renderAll();
+    }
+  });
+  document.addEventListener('submit', async (e) => {
+    if (e.target.id !== 'roomJoinForm' || !Sync) return;
+    e.preventDefault();
+    const id = Sync.cleanRoomId($('roomCodeInput').value);
+    if (id.length !== Sync.ROOM_ID_LENGTH) { setRoomMsg('방 코드는 영문·숫자 10자리입니다.', 'err'); return; }
+    await joinById(id);
+  });
+  async function joinById(id) {
+    if (room && room.id === id) { roomCardOpen = true; renderRoom(); return; }
+    if (room) leaveRoomLocal();
+    // 서버 값을 받기 전까지는 가린 상태로 둔다 (안전한 기본값)
+    const base = { ...freshState(false), hidden: [], drawCode: null, drawMethod: null, players: [], manualAwards: [], isSample: false, hideHidden: true };
+    enterRoomState(id, false, base);
+    renderAll();
+    await connectRoom(id, false);
+    if (room) setRoomMsg('방에 들어왔습니다. 선수 명단에서 내 조를 정하고 스코어를 넣으세요.', 'ok');
+  }
+  window.addEventListener('online', () => renderRoom());
+  window.addEventListener('offline', () => renderRoom());
+
+  /** 참가자 폰: 코스·규칙 입력을 잠그고 이유를 보여 준다 */
+  function applyCourseLock() {
+    const lock = !canEditCourse();
+    document.querySelectorAll('#courseGrid select, #rulesBox input, #rulesBox select, #drawHidden, #drawPeoria, #clearHidden, #hideHidden, #eventName, #eventDate, #optBooby, #optMostPars')
+      .forEach((el) => { el.disabled = lock || (state.hideHidden && (el.id === 'clearHidden' || (!room && ['drawHidden', 'drawPeoria'].includes(el.id)))); });
+    document.querySelectorAll('#courseGrid [data-toggle]').forEach((el) => { el.setAttribute('aria-disabled', String(lock)); el.style.cursor = lock ? 'default' : ''; });
+    $('courseHelp').hidden = lock;
+    $('courseLockNote').hidden = !lock;
+  }
+
   function renderAll() {
     $('eventName').value = state.eventName;
     $('eventDate').value = state.eventDate;
-    $('sampleBar').hidden = !state.isSample;
+    $('sampleBar').hidden = !hasSampleData();
+    renderRoom();
     showTab();
+    applyCourseLock();
+  }
+
+  // 시작: 온라인 방 복원 → 초대 링크(?room=) 처리 → 화면
+  let startRoom = null;
+  if (Sync) {
+    try {
+      Sync.init(window.PEORIA_FIREBASE);
+      const raw = localStorage.getItem(ROOM_KEY);
+      const saved = raw ? JSON.parse(raw) : null;
+      if (saved && typeof saved.id === 'string' && Sync.cleanRoomId(saved.id).length === Sync.ROOM_ID_LENGTH && saved.state) {
+        room = { id: Sync.cleanRoomId(saved.id), isOwner: saved.isOwner === true, status: 'connecting' };
+        state = cleanState(saved.state);
+        startRoom = { id: room.id, isOwner: room.isOwner, rejoin: true };
+      }
+      const linkId = Sync.cleanRoomId(new URLSearchParams(location.search).get('room'));
+      if (linkId.length === Sync.ROOM_ID_LENGTH) {
+        history.replaceState(null, '', location.pathname + (location.hash || '#scores'));
+        if (!room || room.id !== linkId) startRoom = { id: linkId, isOwner: false, rejoin: false };
+        roomCardOpen = true;
+      }
+    } catch (e) {
+      room = null;
+    }
   }
   renderAll();
+  if (startRoom) {
+    if (startRoom.rejoin) connectRoom(startRoom.id, startRoom.isOwner);
+    else joinById(startRoom.id);
+  }
 })();
 </script>
 

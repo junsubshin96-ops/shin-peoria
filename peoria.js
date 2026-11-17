@@ -59,7 +59,7 @@
   });
 
   const fix0 = (x) => (Object.is(x, -0) ? 0 : x);
-  const round1 = (x) => fix0(Math.round(x * 10) / 10);
+  const round1 = (x) => fix0(Math.round(Number((x * 10).toFixed(6))) / 10);
   const sum = (arr) => arr.reduce((a, b) => a + b, 0);
   const isScore = (n) => Number.isInteger(n) && n >= 1 && n <= 30;
   const isTotal = (n) => Number.isInteger(n) && n >= 1 && n <= 300;
@@ -74,17 +74,23 @@
     if (!FORMULAS[s.formula]) s.formula = DEFAULT_SETTINGS.formula;
     if (!TIE_BREAKS[s.tieBreak]) s.tieBreak = DEFAULT_SETTINGS.tieBreak;
     if (!TIE_BREAKS[s.tieBreak2]) s.tieBreak2 = DEFAULT_SETTINGS.tieBreak2;
+    if (s.capScope !== 'all') s.capScope = 'handicap';
+    const num = (v, lo, hi) => (typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi ? v : null);
+    s.coefficient = num(s.coefficient, 0.1, 1.5) ?? DEFAULT_SETTINGS.coefficient;
+    s.maxHandicap = s.maxHandicap === null ? null : (num(s.maxHandicap, 0, 108) ?? DEFAULT_SETTINGS.maxHandicap);
+    s.maxHandicapF = num(s.maxHandicapF, 0, 108);
+    for (const k of ['minZero', 'excludeMedalist', 'splitByGender']) s[k] = typeof s[k] === 'boolean' ? s[k] : DEFAULT_SETTINGS[k];
     return s;
   }
 
   function validateCourse(pars, hidden) {
     const errors = [];
-    if (!Array.isArray(pars) || pars.length !== HOLES || !pars.every((p) => p >= 3 && p <= 6)) {
+    if (!Array.isArray(pars) || pars.length !== HOLES || !pars.every((p) => Number.isInteger(p) && p >= 3 && p <= 6)) {
       errors.push('홀별 파는 18개, 각 3~6이어야 합니다.');
     }
     if (!Array.isArray(hidden) || hidden.length === 0) {
       errors.push('숨김홀을 1개 이상 고르세요.');
-    } else if (new Set(hidden).size !== hidden.length || !hidden.every((h) => h >= 0 && h < HOLES)) {
+    } else if (new Set(hidden).size !== hidden.length || !hidden.every((h) => Number.isInteger(h) && h >= 0 && h < HOLES)) {
       errors.push('숨김홀 번호가 잘못되었습니다.');
     }
     return errors;
@@ -97,8 +103,10 @@
     const expectedPar = (coursePar * hidden.length) / HOLES;
     const front = hidden.filter((h) => h < 9).length;
     const warnings = [];
-    if (hidden.length && hiddenPar !== expectedPar) {
-      warnings.push(`숨김홀 파 합이 ${hiddenPar}입니다. 보통은 ${fix0(round1(expectedPar))}에 맞춥니다. 식에 따라 결과가 달라질 수 있습니다.`);
+    // 기대값이 정수가 아니면(예: 48.7) 정확히 맞출 수 없으므로 1타 이상 벌어질 때만 알린다
+    if (hidden.length && Math.abs(hiddenPar - expectedPar) >= (Number.isInteger(expectedPar) ? 0.5 : 1)) {
+      const target = Number.isInteger(expectedPar) ? expectedPar : `${Math.floor(expectedPar)}~${Math.ceil(expectedPar)}`;
+      warnings.push(`숨김홀 파 합이 ${hiddenPar}입니다. 보통은 ${target}에 맞춥니다. 식에 따라 결과가 달라질 수 있습니다.`);
     }
     if (hidden.length % 2 === 0 && front !== hidden.length / 2) {
       warnings.push(`전반 ${front}개 · 후반 ${hidden.length - front}개로 치우쳐 있습니다.`);
@@ -108,7 +116,7 @@
 
   function applyRounding(x, mode) {
     const r = ROUNDING[mode] || ROUNDING.round1;
-    return fix0(r.fn(x));
+    return fix0(r.fn(Number(x.toFixed(9))));
   }
 
   /**
@@ -123,12 +131,15 @@
     const capOf = HOLE_CAPS[s.holeCap].cap;
     const base = { id: player.id, name: player.name, birthYear: player.birthYear ?? null, gender: player.gender || '' };
 
-    let gross, hiddenSum, front = null, back = null, scores = null, hiddenDetail = null;
+    let gross, hiddenSum, front = null, back = null, scores = null, countScores = null, hiddenDetail = null;
     const notes = [];
     const totals = player.totals;
     if (totals && (totals.gross != null || totals.hiddenSum != null)) {
       if (!isTotal(totals.gross) || !isTotal(totals.hiddenSum)) return { ...base, complete: false, missing: [], mode: 'total' };
-      if (totals.hiddenSum > totals.gross) return { ...base, complete: false, missing: [], mode: 'total', error: '숨김홀 합계가 그로스보다 큽니다.' };
+      const n = hidden.length;
+      if (totals.hiddenSum < n || totals.hiddenSum > totals.gross - (HOLES - n)) {
+        return { ...base, complete: false, missing: [], mode: 'total', error: `숨김홀 합계는 ${n}~${totals.gross - (HOLES - n)} 사이여야 합니다. (홀마다 1타 이상)` };
+      }
       gross = totals.gross;
       hiddenSum = totals.hiddenSum;
       notes.push('합계 입력');
@@ -142,6 +153,7 @@
       front = sum(grossScores.slice(0, 9));
       back = sum(grossScores.slice(9, 18));
       gross = front + back;
+      countScores = grossScores;
       hiddenDetail = hidden.map((h) => ({ hole: h + 1, par: pars[h], score: scores[h], counted: capped[h] }));
       hiddenSum = sum(hiddenDetail.map((d) => d.counted));
       const cappedHoles = hiddenDetail.filter((d) => d.counted !== d.score).map((d) => d.hole);
@@ -164,6 +176,7 @@
       mode: scores ? 'holes' : 'total',
       missing: [],
       scores,
+      countScores,
       hiddenDetail,
       front, back, gross, hiddenSum, hiddenPar, multiplier, coursePar,
       formula: s.formula,
@@ -200,8 +213,9 @@
         ? COUNTBACK_STEPS
         : Array.from({ length: HOLES }, (_, k) => ({ label: `${HOLES - k}번 홀`, holes: [HOLES - 1 - k] }));
       for (const step of steps) {
-        const sa = sum(step.holes.map((h) => a.scores[h]));
-        const sb = sum(step.holes.map((h) => b.scores[h]));
+        const ca = a.countScores || a.scores, cb = b.countScores || b.scores;
+        const sa = sum(step.holes.map((h) => ca[h]));
+        const sb = sum(step.holes.map((h) => cb[h]));
         if (sa !== sb) return { decided: true, order: sa - sb, reason: `${step.label} ${Math.min(sa, sb)}타 vs ${Math.max(sa, sb)}타` };
       }
       return { decided: false };
@@ -255,7 +269,11 @@
     const incomplete = results.filter((r) => !r.complete);
 
     const minGross = done.length ? Math.min(...done.map((r) => r.gross)) : null;
-    const medalist = done.filter((r) => r.gross === minGross).sort((a, b) => a.net - b.net)[0] || null;
+    const rules = [s.tieBreak, s.tieBreak2].filter((r, i, arr) => r && arr.indexOf(r) === i);
+    // 그로스 → 네트 → 동점 규칙 → 이름·id 순. 마지막 두 단계는 입력 순서에 좌우되지 않게 하려는 고정 순서
+    const medalist = done.filter((r) => r.gross === minGross).sort((a, b) =>
+      a.net - b.net || compareTie(a, b, rules).order || String(a.name).localeCompare(String(b.name), 'ko') || String(a.id).localeCompare(String(b.id))
+    )[0] || null;
     const medalistId = medalist ? medalist.id : null;
 
     const ranked = rankGroup(done, s, medalistId);
@@ -292,7 +310,7 @@
       const above = result.ranked.filter((r) => r.rank < lastRank);
       const boobyRank = above.length ? Math.max(...above.map((r) => r.rank)) : null;
       const w = result.ranked.filter((r) => r.rank === boobyRank);
-      if (w.length) awards.push({ key: 'booby', title: '브비상 (뒤에서 2등)', winners: w, detail: `네트 ${w[0].net}` });
+      if (w.length && boobyRank > 3) awards.push({ key: 'booby', title: '부비상 (뒤에서 2등)', winners: w, detail: `네트 ${w[0].net}` });
     }
     const withScores = all.filter((r) => r.scores);
     const countBy = (fn) => withScores.map((r) => ({ r, n: r.scores.filter((v, i) => fn(v, pars[i])).length }));
@@ -300,7 +318,7 @@
       const max = Math.max(0, ...list.map((x) => x.n));
       if (max > 0) awards.push({ key, title, winners: list.filter((x) => x.n === max).map((x) => x.r), detail: `${max}${unit}` });
     };
-    if (options.mostBirdies !== false) most(countBy((v, p) => v < p), 'birdie', '다버디상', '개 (버디 이상)');
+    if (options.mostBirdies !== false) most(countBy((v, p) => v < p), 'birdie', '다버디상', '개 · 버디 이상');
     if (options.mostPars) most(countBy((v, p) => v === p), 'par', '다파상', '개');
     const aces = withScores.flatMap((r) => r.scores.map((v, i) => (v === 1 ? { r, hole: i + 1 } : null)).filter(Boolean));
     if (aces.length) awards.push({ key: 'ace', title: '홀인원', winners: aces.map((a) => a.r), detail: aces.map((a) => `${a.hole}번 홀`).join(', ') });
@@ -337,6 +355,7 @@
    * 2순위 파 합을 코스 파 × n/18 에 맞춘 조합, 3순위 무작위. method 에 어느 단계로 뽑았는지 남긴다.
    */
   function drawHidden(pars, rng = Math.random, count = 12) {
+    count = Math.min(HOLES, Math.max(1, Math.round(Number(count)) || 12));
     const shuffle = (arr) => {
       const a = [...arr];
       for (let i = a.length - 1; i > 0; i--) {
@@ -346,10 +365,11 @@
       return a;
     };
     const per = Math.floor(count / 2);
-    const recipe = per === 6 ? { 3: 1, 4: 4, 5: 1 } : per === 3 ? { 3: 1, 4: 1, 5: 1 } : null;
+    const recipeFor = (n) => (n === 6 ? { 3: 1, 4: 4, 5: 1 } : n === 3 ? { 3: 1, 4: 1, 5: 1 } : null);
     const methods = [];
     const pickNine = (start, n) => {
       const holes = Array.from({ length: 9 }, (_, i) => start + i);
+      const recipe = recipeFor(n);
       if (recipe) {
         const picked = [];
         let ok = true;
@@ -390,27 +410,41 @@
   function parsePasted(text, pars, relative) {
     const rows = [];
     const errors = [];
-    String(text).split(/\r?\n/).forEach((line, idx) => {
+    const failedLines = [];   // 고쳐서 다시 넣도록 실패한 줄 원문을 돌려준다
+    let skipped = 0;          // 머리글·파 줄처럼 선수가 아닌 줄
+    const HEADER_WORD = /^(이름|성명|선수|name|홀|hole|파|par|out|in|합계|total|tot)$/i;
+    String(text).normalize('NFKC').split(/\r\n|\r|\n/).forEach((line, idx) => {
       const trimmed = line.trim();
       if (!trimmed) return;
-      const cells = trimmed.split(/[\t,]+|\s+/).filter(Boolean);
+      let cells = trimmed.split(/[\t,]+|\s+/).filter(Boolean);
       const isNum = (c) => /^[+-]?\d+$/.test(c);
+      const numsAll = cells.filter(isNum).map(Number);
+      const sequential = numsAll.length >= HOLES && numsAll.slice(0, HOLES).every((n, i) => n === i + 1);
+      if (cells.some((c) => HEADER_WORD.test(c)) || sequential) { skipped++; return; }
+      const fail = (msg) => { errors.push(msg); failedLines.push(line); };
+      // 끝에 합계 열이 붙은 줄(18개 + 합계)은 합계를 떼어 낸다
+      if (cells.length > HOLES && cells.slice(-(HOLES + 1)).every(isNum)) {
+        const t = cells.slice(-(HOLES + 1)).map(Number);
+        const body = t.slice(0, HOLES);
+        if (t[HOLES] === sum(body) || (relative && t[HOLES] === sum(body) + sum(pars))) cells = cells.slice(0, -1);
+      }
       const tail = cells.slice(-HOLES);
       if (cells.length < HOLES || !tail.every(isNum)) {
         const count = cells.filter(isNum).length;
-        errors.push(`${idx + 1}번째 줄: 끝에 숫자 18개가 필요합니다. (현재 숫자 ${count}개)`);
-        return;
+        return fail(`${idx + 1}번째 줄: 끝에 숫자 18개가 필요합니다. (현재 숫자 ${count}개)`);
       }
       const nums = tail.map(Number);
+      if (relative && nums.every((n) => n >= 3)) {
+        return fail(`${idx + 1}번째 줄: 타수를 그대로 적은 것 같습니다. "파 대비"를 끄고 다시 넣으세요.`);
+      }
       const nameParts = cells.slice(0, cells.length - HOLES);
       const scores = nums.map((n, i) => (relative ? pars[i] + n : n));
       if (!scores.every(isScore)) {
-        errors.push(`${idx + 1}번째 줄: 1~30 범위를 벗어난 타수가 있습니다.`);
-        return;
+        return fail(`${idx + 1}번째 줄: 1~30 범위를 벗어난 타수가 있습니다.`);
       }
       rows.push({ name: nameParts.join(' ') || `선수${rows.length + 1}`, scores });
     });
-    return { rows, errors };
+    return { rows, errors, failedLines, skipped };
   }
 
   return {
