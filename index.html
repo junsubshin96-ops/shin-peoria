@@ -94,6 +94,16 @@ header.top { display: grid; gap: 10px; }
 #roomPill .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: currentColor; }
 #roomPill.warn { background: var(--mark); color: var(--mark-ink); border-color: var(--mark); }
 .room-card, .install-card { border-color: var(--green); }
+/* 처음 연 브라우저: 화면 전체에 앱 설치 버튼 하나 */
+.install-card.install-full { position: fixed; inset: 0; z-index: 100; border: 0; border-radius: 0; background: var(--bg);
+  display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top, 0px)) 24px max(24px, env(safe-area-inset-bottom, 0px)); overflow-y: auto; }
+.install-full #installBody { width: min(100%, 360px); display: grid; gap: 20px; justify-items: center; text-align: center; }
+.install-full .app-logo { width: 88px; height: 88px; }
+.install-full h2 { font-size: 1.5rem; }
+.install-go { width: 100%; min-height: 64px; font-size: 1.25rem; border-radius: 16px; }
+.install-steps { width: 100%; text-align: left; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r); padding: 16px 18px; display: grid; gap: 10px; }
+.install-skip { font-size: 0.95rem; text-decoration: underline; text-underline-offset: 3px; }
+html.install-lock, html.install-lock body { overflow: hidden; }
 .steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; line-height: 1.5; }
 a.btn-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 18px; border-radius: 12px; font-weight: 700; text-decoration: none; }
 a.btn-link.primary { background: var(--green); color: var(--on-green); }
@@ -297,7 +307,7 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; line-h
   <header class="top">
     <div class="brand">
       <div class="brand-name">
-        <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
+        <svg id="appLogo" width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
           <rect width="34" height="34" rx="9" fill="var(--green)"/>
           <line x1="13" y1="7" x2="13" y2="27" stroke="#fff" stroke-width="2"/>
           <path d="M13 7 L25 11 L13 15 Z" fill="#ffe680"/>
@@ -480,8 +490,8 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; line-h
 
 
 
-<script src="sync.js?v=20261117104314"></script>
-<script src="peoria.js?v=20261117104314"></script>
+<script src="sync.js?v=20261117104723"></script>
+<script src="peoria.js?v=20261117104723"></script>
 <script>
 (function () {
   'use strict';
@@ -1838,25 +1848,31 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; line-h
     else if (env.android) location.href = `intent://${location.host}${location.pathname}${location.search}${location.hash}#Intent;scheme=https;package=com.android.chrome;end`;
   }
   const roomCodeLine = () => (room ? `<p>설치한 앱에서 <b>함께 입력</b>을 누르고 방 코드 <b class="room-code" style="font-size:1.2rem">${esc(fmtRoom(room.id))}</b>를 넣으세요.</p>` : '');
-  function installSteps() {
-    if (env.kakao) {
-      return `<a class="btn-link primary" href="kakaotalk://web/openExternal?url=${encodeURIComponent(shareableUrl())}">${env.ios ? '사파리로' : '크롬으로'} 열기</a>`;
-    }
+  // 설치 창을 바로 못 띄우는 브라우저에서 "앱 설치"를 눌렀을 때 보여 줄 방법
+  function manualSteps() {
     if (env.inApp) return `<p>오른쪽 위 <b>⋯ → 다른 브라우저로 열기</b></p>`;
-    if (installEvent) return `<button type="button" class="primary" id="installNow" style="min-height:56px;font-size:1.1rem">앱 설치</button>`;
-    if (env.ios) return `<ol class="steps"><li><b>공유 버튼</b>(네모에 위쪽 화살표)</li><li><b>홈 화면에 추가</b></li><li><b>추가</b></li></ol>${roomCodeLine()}`;
+    if (env.ios) return `<ol class="steps"><li>아래 <b>공유 버튼</b>(네모에 위쪽 화살표)</li><li><b>홈 화면에 추가</b></li><li><b>추가</b></li></ol>${roomCodeLine()}`;
     if (env.samsung) return `<ol class="steps"><li>아래 <b>≡ 메뉴</b></li><li><b>현재 페이지 추가 → 홈 화면</b></li></ol>`;
     if (env.android) return `<ol class="steps"><li>오른쪽 위 <b>⋮ 메뉴</b></li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b></li></ol>`;
     return `<p>주소창 오른쪽 <b>설치 아이콘</b> 또는 브라우저 메뉴의 <b>앱 설치</b></p>`;
   }
+  let showManual = false;
+  function installMain() {
+    if (env.kakao) return `<a class="btn-link primary install-go" href="kakaotalk://web/openExternal?url=${encodeURIComponent(shareableUrl())}">앱 설치</a>`;
+    return `<button type="button" class="primary install-go" id="installNow">앱 설치</button>${showManual ? `<div class="install-steps">${manualSteps()}</div>` : ''}`;
+  }
+  const LOGO = $('appLogo') ? $('appLogo').outerHTML.replace('id="appLogo"', 'class="app-logo"') : '';
   function renderInstall() {
     const show = canBeApp && !isStandalone();
-    $('installCard').hidden = !(show && (installOpen || env.inApp || installDone));
-    $('installBtn').hidden = !show || installDone || !$('installCard').hidden;
-    if ($('installCard').hidden) return;
+    const card = $('installCard');
+    card.hidden = !(show && (installOpen || env.inApp || installDone));
+    $('installBtn').hidden = !show || installDone || !card.hidden;
+    card.classList.toggle('install-full', !card.hidden);
+    document.documentElement.classList.toggle('install-lock', !card.hidden);
+    if (card.hidden) return;
     $('installBody').innerHTML = installDone
-      ? `<div class="card-head"><h2>설치 완료</h2><button type="button" class="ghost" id="installClose">닫기</button></div><p>홈 화면의 <b>신페리오</b> 아이콘으로 여세요.</p>`
-      : `<div class="card-head"><h2>앱 설치</h2><button type="button" class="ghost" id="installClose">웹으로 계속</button></div>${installSteps()}`;
+      ? `${LOGO}<h2>설치 완료</h2><p>홈 화면의 <b>신페리오</b> 아이콘으로 여세요.</p><button type="button" class="ghost" id="installClose">닫기</button>`
+      : `${LOGO}<h2>신페리오 계산기</h2>${installMain()}<button type="button" class="ghost install-skip" id="installClose">웹으로 쓰기</button>`;
   }
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; renderInstall(); });
   window.addEventListener('appinstalled', () => { installEvent = null; installDone = true; renderInstall(); });
@@ -1871,17 +1887,19 @@ footer { font-size: 0.9rem; color: var(--muted); display: grid; gap: 8px; line-h
     const t = e.target.closest('button');
     if (!t) return;
     if (t.id === 'installClose') {
-      installOpen = false; installDone = false; env.inApp = false;
+      installOpen = false; installDone = false; env.inApp = false; showManual = false;
       try { localStorage.setItem(INSTALL_SEEN_KEY, '1'); } catch (err) { /* 저장소 없음: 다음에 다시 뜰 뿐 */ }
       renderInstall();
       return;
     }
-    if (t.id === 'installNow' && installEvent) { await promptInstall(); return; }
+    if (t.id === 'installNow') {
+      if (installEvent) { await promptInstall(); return; }
+      showManual = true; renderInstall(); return;
+    }
     if (t.id !== 'installBtn') return;
     if (installEvent) { await promptInstall(); return; }
-    installOpen = !installOpen;
+    installOpen = true; showManual = true;
     renderInstall();
-    if (installOpen) $('installCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   });
 
   // ---------- 온라인 방 화면 ----------
